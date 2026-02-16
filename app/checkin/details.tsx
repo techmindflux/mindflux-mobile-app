@@ -15,10 +15,12 @@ import * as Haptics from 'expo-haptics';
 import Slider from '@react-native-community/slider';
 import { THOUGHT_NATURES, SUB_CATEGORIES, ACTIVITIES, COMPANIONS, LOCATIONS } from '@/constants/checkin';
 import { ThoughtNature } from '@/types/checkin';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function CheckInDetailsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const { nature, subCategories } = useLocalSearchParams<{
     nature: ThoughtNature;
     subCategories: string;
@@ -62,7 +64,7 @@ export default function CheckInDetailsScreen() {
   const handleStartSession = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     router.push({
-      pathname: '/coaching',
+      pathname: '/coaching' as never,
       params: {
         nature,
         subCategories,
@@ -85,22 +87,33 @@ export default function CheckInDetailsScreen() {
     onPress: () => void;
   }) => (
     <TouchableOpacity
-      style={[styles.tag, isSelected && styles.tagSelected]}
+      style={[
+        styles.tag,
+        {
+          backgroundColor: isSelected ? colors.primary : colors.surface,
+          borderColor: isSelected ? colors.primary : colors.border,
+        },
+      ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <Text style={[styles.tagText, isSelected && styles.tagTextSelected]}>{label}</Text>
+      <Text style={[
+        styles.tagText,
+        { color: isSelected ? colors.textInverse : colors.text },
+      ]}>
+        {label}
+      </Text>
     </TouchableOpacity>
   );
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <TouchableOpacity
-        style={styles.backButton}
+        style={[styles.backButton, { top: insets.top + 12 }]}
         onPress={handleBack}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <ArrowLeft color="#636366" size={24} />
+        <ArrowLeft color={colors.textSecondary} size={22} />
       </TouchableOpacity>
 
       <ScrollView
@@ -113,22 +126,20 @@ export default function CheckInDetailsScreen() {
             <View style={[styles.emotionIcon, { backgroundColor: natureData.color }]}>
               <View style={styles.emotionIconInner} />
             </View>
-            <Text style={styles.feelingLabel}>I&apos;m feeling</Text>
-            <Text style={[styles.feelingValue, { color: natureData.color }]}>
-              {subCategoryLabel}
-            </Text>
+            <Text style={[styles.feelingLabel, { color: colors.textSecondary }]}>I&apos;m feeling</Text>
+            <Text style={[styles.feelingValue, { color: natureData.color }]}>{subCategoryLabel}</Text>
           </View>
 
           <View style={styles.section}>
             <View style={styles.intensityHeader}>
-              <Text style={styles.sectionLabel}>How intense is this feeling?</Text>
+              <Text style={[styles.sectionLabel, { color: colors.text }]}>How intense is this feeling?</Text>
               <View style={[styles.intensityBadge, { backgroundColor: `${natureData.color}20` }]}>
                 <Text style={[styles.intensityBadgeText, { color: natureData.color }]}>
                   {getIntensityLabel()}
                 </Text>
               </View>
             </View>
-            <View style={styles.sliderContainer}>
+            <View style={[styles.sliderContainer, { backgroundColor: colors.surface }]}>
               <Slider
                 style={styles.slider}
                 minimumValue={0}
@@ -136,34 +147,34 @@ export default function CheckInDetailsScreen() {
                 value={intensity}
                 onValueChange={setIntensity}
                 minimumTrackTintColor={natureData.color}
-                maximumTrackTintColor="#E5E5EA"
+                maximumTrackTintColor={colors.border}
                 thumbTintColor={natureData.color}
               />
               <View style={styles.sliderLabels}>
-                <Text style={styles.sliderLabel}>Barely noticeable</Text>
-                <Text style={styles.sliderLabel}>Overwhelming</Text>
+                <Text style={[styles.sliderLabel, { color: colors.textMuted }]}>Barely noticeable</Text>
+                <Text style={[styles.sliderLabel, { color: colors.textMuted }]}>Overwhelming</Text>
               </View>
             </View>
           </View>
 
           <TouchableOpacity
-            style={styles.journalToggle}
+            style={[styles.journalToggle, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => setJournalExpanded(!journalExpanded)}
             activeOpacity={0.7}
           >
-            <Text style={styles.journalToggleText}>Add Journal Entry (optional)</Text>
+            <Text style={[styles.journalToggleText, { color: colors.text }]}>Add Journal Entry (optional)</Text>
             {journalExpanded ? (
-              <ChevronUp color="#8E8E93" size={20} />
+              <ChevronUp color={colors.textMuted} size={18} />
             ) : (
-              <ChevronDown color="#8E8E93" size={20} />
+              <ChevronDown color={colors.textMuted} size={18} />
             )}
           </TouchableOpacity>
 
           {journalExpanded && (
             <TextInput
-              style={styles.journalInput}
+              style={[styles.journalInput, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
               placeholder="Write about what's on your mind..."
-              placeholderTextColor="#C7C7CC"
+              placeholderTextColor={colors.inputPlaceholder}
               value={journalEntry}
               onChangeText={setJournalEntry}
               multiline
@@ -172,7 +183,7 @@ export default function CheckInDetailsScreen() {
           )}
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>What are you doing?</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>What are you doing?</Text>
             <View style={styles.tagsContainer}>
               {ACTIVITIES.map((activity) => (
                 <TagButton
@@ -189,7 +200,7 @@ export default function CheckInDetailsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Who are you with?</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Who are you with?</Text>
             <View style={styles.tagsContainer}>
               {COMPANIONS.map((companion) => (
                 <TagButton
@@ -206,7 +217,7 @@ export default function CheckInDetailsScreen() {
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Where are you?</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Where are you?</Text>
             <View style={styles.tagsContainer}>
               {LOCATIONS.map((location) => (
                 <TagButton
@@ -224,13 +235,13 @@ export default function CheckInDetailsScreen() {
         </Animated.View>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20, backgroundColor: colors.background }]}>
         <TouchableOpacity
-          style={styles.sessionButton}
+          style={[styles.sessionButton, { backgroundColor: colors.primary }]}
           onPress={handleStartSession}
           activeOpacity={0.9}
         >
-          <Text style={styles.sessionButtonText}>Start Coaching Session</Text>
+          <Text style={[styles.sessionButtonText, { color: colors.textInverse }]}>Start Coaching Session</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -240,11 +251,9 @@ export default function CheckInDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F6F3',
   },
   backButton: {
     position: 'absolute',
-    top: 60,
     left: 20,
     zIndex: 10,
     padding: 8,
@@ -263,27 +272,26 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   emotionIcon: {
-    width: 56,
-    height: 56,
+    width: 52,
+    height: 52,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
   emotionIconInner: {
-    width: 24,
-    height: 24,
+    width: 22,
+    height: 22,
     borderRadius: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.4)',
   },
   feelingLabel: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '300' as const,
-    color: '#2C2C2E',
     fontStyle: 'italic',
   },
   feelingValue: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '300' as const,
     fontStyle: 'italic',
   },
@@ -298,20 +306,18 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 15,
-    color: '#2C2C2E',
     fontWeight: '500' as const,
   },
   intensityBadge: {
     paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 10,
   },
   intensityBadgeText: {
     fontSize: 13,
     fontWeight: '600' as const,
   },
   sliderContainer: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
   },
@@ -325,36 +331,32 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   sliderLabel: {
-    fontSize: 12,
-    color: '#8E8E93',
+    fontSize: 11,
   },
   journalToggle: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
     padding: 16,
-    borderRadius: 16,
-    marginBottom: 16,
+    borderRadius: 14,
+    marginBottom: 14,
+    borderWidth: 0.5,
   },
   journalToggleText: {
     fontSize: 15,
-    color: '#2C2C2E',
     fontWeight: '500' as const,
   },
   journalInput: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 14,
     padding: 16,
     marginBottom: 24,
     minHeight: 100,
     fontSize: 15,
-    color: '#2C2C2E',
     lineHeight: 22,
+    borderWidth: 0.5,
   },
   sectionTitle: {
     fontSize: 15,
-    color: '#2C2C2E',
     fontWeight: '500' as const,
     marginBottom: 12,
   },
@@ -364,21 +366,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tag: {
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-  },
-  tagSelected: {
-    backgroundColor: '#2C2C2E',
+    borderWidth: 0.5,
   },
   tagText: {
     fontSize: 14,
-    color: '#2C2C2E',
     fontWeight: '500' as const,
-  },
-  tagTextSelected: {
-    color: '#FFFFFF',
   },
   footer: {
     position: 'absolute',
@@ -387,17 +382,14 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 24,
     paddingTop: 16,
-    backgroundColor: 'rgba(247, 246, 243, 0.95)',
   },
   sessionButton: {
-    backgroundColor: '#1C1C1E',
-    paddingVertical: 18,
-    borderRadius: 28,
+    paddingVertical: 17,
+    borderRadius: 16,
     alignItems: 'center',
   },
   sessionButtonText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600' as const,
-    color: '#FFFFFF',
   },
 });

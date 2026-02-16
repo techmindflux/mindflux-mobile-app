@@ -14,16 +14,15 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { X, Send, Sparkles } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import { THOUGHT_NATURES, SUB_CATEGORIES } from '@/constants/checkin';
 import { ThoughtNature, CoachingMessage } from '@/types/checkin';
 import { sendChatMessage, getLuminaFallbackResponse, ChatMessage } from '@/utils/aiService';
-
-
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function CoachingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
   const { nature, subCategories, intensity } = useLocalSearchParams<{
     nature: ThoughtNature;
@@ -57,7 +56,7 @@ export default function CoachingScreen() {
       content: `Hello, I'm Lumina, your mindfulness coach. I see you're experiencing ${subCategoryLabels.toLowerCase()}. This is a safe space to explore what's on your mind. What would you like to share about what you're feeling right now?`,
       timestamp: new Date().toISOString(),
     };
-    
+
     setTimeout(() => {
       setMessages([initialMessage]);
     }, 800);
@@ -86,16 +85,16 @@ export default function CoachingScreen() {
 
   const handleSend = () => {
     if (!inputText.trim()) return;
-    
+
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    
+
     const userMessage: CoachingMessage = {
       id: Date.now().toString(),
       role: 'user',
       content: inputText.trim(),
       timestamp: new Date().toISOString(),
     };
-    
+
     setMessages((prev) => [...prev, userMessage]);
     setInputText('');
     setIsTyping(true);
@@ -109,42 +108,42 @@ export default function CoachingScreen() {
       ...conversationHistory,
       { role: 'user' as const, content: inputText.trim() },
     ];
-    
+
     setConversationHistory(updatedHistory);
-    
+
     const getAIResponse = async () => {
       const messagesWithContext: ChatMessage[] = [
         { role: 'user' as const, content: contextMessage },
         ...updatedHistory,
       ];
-      
+
       const response = await sendChatMessage(messagesWithContext);
-      
+
       let responseContent = response.content;
       if (response.error || !responseContent) {
         console.log('Using fallback response due to:', response.error);
         responseContent = getLuminaFallbackResponse(inputText.trim(), contextMessage);
       }
-      
+
       const coachMessage: CoachingMessage = {
         id: (Date.now() + 1).toString(),
         role: 'coach',
         content: responseContent,
         timestamp: new Date().toISOString(),
       };
-      
+
       setMessages((prev) => [...prev, coachMessage]);
       setConversationHistory((prev) => [
         ...prev,
         { role: 'assistant' as const, content: responseContent },
       ]);
       setIsTyping(false);
-      
+
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
     };
-    
+
     getAIResponse();
   };
 
@@ -154,31 +153,26 @@ export default function CoachingScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#F7F6F3', '#FFFFFF']}
-        style={StyleSheet.absoluteFill}
-      />
-      
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 12, borderBottomColor: colors.separator }]}>
         <TouchableOpacity
           style={styles.closeButton}
           onPress={handleClose}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <X color="#636366" size={24} />
+          <X color={colors.textSecondary} size={22} />
         </TouchableOpacity>
-        
+
         <View style={styles.headerCenter}>
           <View style={[styles.luminaAvatar, { backgroundColor: natureData.color }]}>
-            <Sparkles color="#FFFFFF" size={20} />
+            <Sparkles color="#FFFFFF" size={18} />
           </View>
           <View>
-            <Text style={styles.headerTitle}>Lumina</Text>
-            <Text style={styles.headerSubtitle}>Your mindfulness coach</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Lumina</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>Your mindfulness coach</Text>
           </View>
         </View>
-        
+
         <View style={styles.headerRight} />
       </View>
 
@@ -212,19 +206,23 @@ export default function CoachingScreen() {
             >
               {message.role === 'coach' && (
                 <View style={[styles.messageAvatar, { backgroundColor: natureData.color }]}>
-                  <Sparkles color="#FFFFFF" size={14} />
+                  <Sparkles color="#FFFFFF" size={12} />
                 </View>
               )}
               <View
                 style={[
                   styles.messageBubble,
-                  message.role === 'user' ? styles.userBubble : styles.coachBubble,
+                  message.role === 'user'
+                    ? [styles.userBubble, { backgroundColor: colors.primary }]
+                    : [styles.coachBubble, { backgroundColor: colors.surface }],
                 ]}
               >
                 <Text
                   style={[
                     styles.messageText,
-                    message.role === 'user' ? styles.userText : styles.coachText,
+                    message.role === 'user'
+                      ? { color: colors.textInverse }
+                      : { color: colors.text },
                   ]}
                 >
                   {message.content}
@@ -232,32 +230,35 @@ export default function CoachingScreen() {
               </View>
             </Animated.View>
           ))}
-          
+
           {isTyping && (
             <View style={[styles.messageWrapper, styles.coachMessageWrapper]}>
               <View style={[styles.messageAvatar, { backgroundColor: natureData.color }]}>
-                <Sparkles color="#FFFFFF" size={14} />
+                <Sparkles color="#FFFFFF" size={12} />
               </View>
               <Animated.View
                 style={[
                   styles.typingBubble,
-                  { opacity: typingAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) },
+                  {
+                    backgroundColor: colors.surface,
+                    opacity: typingAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }),
+                  },
                 ]}
               >
-                <View style={styles.typingDot} />
-                <View style={styles.typingDot} />
-                <View style={styles.typingDot} />
+                <View style={[styles.typingDot, { backgroundColor: colors.textMuted }]} />
+                <View style={[styles.typingDot, { backgroundColor: colors.textMuted }]} />
+                <View style={[styles.typingDot, { backgroundColor: colors.textMuted }]} />
               </Animated.View>
             </View>
           )}
         </ScrollView>
 
-        <View style={[styles.inputContainer, { paddingBottom: insets.bottom + 12 }]}>
-          <View style={styles.inputWrapper}>
+        <View style={[styles.inputContainer, { paddingBottom: insets.bottom + 12, backgroundColor: colors.background, borderTopColor: colors.separator }]}>
+          <View style={[styles.inputWrapper, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: colors.text }]}
               placeholder="Share what's on your mind..."
-              placeholderTextColor="#8E8E93"
+              placeholderTextColor={colors.inputPlaceholder}
               value={inputText}
               onChangeText={setInputText}
               multiline
@@ -266,12 +267,14 @@ export default function CoachingScreen() {
             <TouchableOpacity
               style={[
                 styles.sendButton,
-                inputText.trim() ? { backgroundColor: natureData.color } : styles.sendButtonDisabled,
+                inputText.trim()
+                  ? { backgroundColor: natureData.color }
+                  : { backgroundColor: colors.surfaceSecondary },
               ]}
               onPress={handleSend}
               disabled={!inputText.trim()}
             >
-              <Send color={inputText.trim() ? '#FFFFFF' : '#C7C7CC'} size={18} />
+              <Send color={inputText.trim() ? '#FFFFFF' : colors.textMuted} size={16} />
             </TouchableOpacity>
           </View>
         </View>
@@ -283,7 +286,6 @@ export default function CoachingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F6F3',
   },
   flex: {
     flex: 1,
@@ -294,12 +296,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
+    borderBottomWidth: 0.5,
   },
   closeButton: {
     padding: 8,
-    width: 44,
+    width: 40,
   },
   headerCenter: {
     flexDirection: 'row',
@@ -307,43 +308,41 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   luminaAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1C1C1E',
   },
   headerSubtitle: {
-    fontSize: 13,
-    color: '#8E8E93',
+    fontSize: 12,
   },
   headerRight: {
-    width: 44,
+    width: 40,
   },
   sessionInfo: {
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
   },
   sessionBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingVertical: 5,
+    borderRadius: 14,
     gap: 6,
   },
   sessionDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   sessionText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500' as const,
   },
   messagesContainer: {
@@ -352,7 +351,7 @@ const styles = StyleSheet.create({
   messagesContent: {
     paddingHorizontal: 16,
     paddingVertical: 16,
-    gap: 16,
+    gap: 14,
   },
   messageWrapper: {
     flexDirection: 'row',
@@ -366,88 +365,67 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   messageAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
   },
   messageBubble: {
     maxWidth: '75%',
-    padding: 14,
-    borderRadius: 20,
+    padding: 13,
+    borderRadius: 18,
   },
   userBubble: {
-    backgroundColor: '#1C1C1E',
     borderBottomRightRadius: 6,
   },
   coachBubble: {
-    backgroundColor: '#FFFFFF',
     borderBottomLeftRadius: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
   },
   messageText: {
     fontSize: 15,
     lineHeight: 22,
   },
-  userText: {
-    color: '#FFFFFF',
-  },
-  coachText: {
-    color: '#1C1C1E',
-  },
   typingBubble: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    borderRadius: 20,
+    borderRadius: 18,
     borderBottomLeftRadius: 6,
   },
   typingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#C7C7CC',
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
   },
   inputContainer: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    backgroundColor: '#F7F6F3',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5EA',
+    borderTopWidth: 0.5,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    borderRadius: 22,
     paddingLeft: 16,
     paddingRight: 6,
     paddingVertical: 6,
     gap: 8,
+    borderWidth: 0.5,
   },
   input: {
     flex: 1,
     fontSize: 15,
-    color: '#1C1C1E',
     maxHeight: 100,
     paddingVertical: 8,
   },
   sendButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  sendButtonDisabled: {
-    backgroundColor: '#F0F0F0',
   },
 });

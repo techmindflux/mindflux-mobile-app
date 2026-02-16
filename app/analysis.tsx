@@ -9,19 +9,17 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { X, Check, Layers, Target, ArrowRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useThoughts } from '@/contexts/ThoughtContext';
 import { analyzeThought } from '@/utils/analyzeThought';
 import { ThoughtLayer } from '@/types/thought';
 
-const LAYER_COLORS = [Colors.layer1, Colors.layer2, Colors.layer3];
-
 export default function AnalysisScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { colors } = useTheme();
   const {
     currentAnalysis,
     analysisLayers,
@@ -32,6 +30,8 @@ export default function AnalysisScreen() {
     completeAnalysis,
     clearCurrentAnalysis,
   } = useThoughts();
+
+  const LAYER_COLORS = [colors.layer1, colors.layer2, colors.layer3];
 
   const [currentStep, setCurrentStep] = useState(0);
   const fadeAnims = useRef([
@@ -49,14 +49,14 @@ export default function AnalysisScreen() {
     }
 
     console.log('Starting analysis process');
-    
+
     analyzeThought(
       currentAnalysis.originalThought,
       (layer: ThoughtLayer) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         addLayer(layer);
         setCurrentStep(layer.id);
-        
+
         Animated.parallel([
           Animated.timing(fadeAnims[layer.id - 1], {
             toValue: 1,
@@ -74,7 +74,7 @@ export default function AnalysisScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setAnalysisRootCause(cause);
         setCurrentStep(4);
-        
+
         Animated.parallel([
           Animated.timing(rootCauseAnim, {
             toValue: 1,
@@ -105,27 +105,23 @@ export default function AnalysisScreen() {
   if (!currentAnalysis) return null;
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={[Colors.background, '#0A0A0D']}
-        style={StyleSheet.absoluteFill}
-      />
-      
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity
-          style={styles.closeButton}
+          style={[styles.closeButton, { backgroundColor: colors.surface }]}
           onPress={handleClose}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <X color={Colors.textSecondary} size={24} />
+          <X color={colors.textSecondary} size={22} />
         </TouchableOpacity>
-        
+
         <View style={styles.progressContainer}>
-          <View style={styles.progressTrack}>
+          <View style={[styles.progressTrack, { backgroundColor: colors.surfaceSecondary }]}>
             <Animated.View
               style={[
                 styles.progressFill,
                 {
+                  backgroundColor: colors.primary,
                   width: progressAnim.interpolate({
                     inputRange: [0, 1],
                     outputRange: ['0%', '100%'],
@@ -134,7 +130,7 @@ export default function AnalysisScreen() {
               ]}
             />
           </View>
-          <Text style={styles.progressText}>
+          <Text style={[styles.progressText, { color: colors.textSecondary }]}>
             {isAnalyzing ? 'Analyzing...' : 'Complete'}
           </Text>
         </View>
@@ -142,21 +138,18 @@ export default function AnalysisScreen() {
 
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + 100 }
-        ]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.thoughtContainer}>
-          <Text style={styles.thoughtLabel}>Your thought</Text>
-          <Text style={styles.thoughtText}>{currentAnalysis.originalThought}</Text>
+        <View style={[styles.thoughtContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.thoughtLabel, { color: colors.textMuted }]}>Your thought</Text>
+          <Text style={[styles.thoughtText, { color: colors.text }]}>{currentAnalysis.originalThought}</Text>
         </View>
 
         <View style={styles.layersSection}>
           <View style={styles.sectionHeader}>
-            <Layers color={Colors.primary} size={20} />
-            <Text style={styles.sectionTitle}>Layers of Understanding</Text>
+            <Layers color={colors.primary} size={18} />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Layers of Understanding</Text>
           </View>
 
           {[0, 1, 2].map((index) => {
@@ -170,41 +163,41 @@ export default function AnalysisScreen() {
                 style={[
                   styles.layerCard,
                   {
-                    opacity: layer ? fadeAnims[index] : 0.3,
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
                     borderLeftColor: color,
+                    opacity: layer ? fadeAnims[index] : 0.3,
                   },
                 ]}
               >
                 <View style={styles.layerHeader}>
                   <View style={[styles.layerBadge, { backgroundColor: color + '20' }]}>
-                    <Text style={[styles.layerNumber, { color }]}>
-                      {index + 1}
-                    </Text>
+                    <Text style={[styles.layerNumber, { color }]}>{index + 1}</Text>
                   </View>
                   <View style={styles.layerTitleContainer}>
-                    <Text style={styles.layerTitle}>
+                    <Text style={[styles.layerTitle, { color: colors.text }]}>
                       {layer?.title || `Layer ${index + 1}`}
                     </Text>
-                    <Text style={styles.layerDescription}>
+                    <Text style={[styles.layerDescription, { color: colors.textSecondary }]}>
                       {layer?.description || 'Analyzing...'}
                     </Text>
                   </View>
                   {isActive && (
                     <View style={[styles.checkmark, { backgroundColor: color }]}>
-                      <Check color={Colors.background} size={14} />
+                      <Check color={colors.textInverse} size={13} />
                     </View>
                   )}
                 </View>
-                
+
                 {layer && (
-                  <Text style={styles.layerInsight}>{layer.insight}</Text>
+                  <Text style={[styles.layerInsight, { color: colors.textSecondary }]}>{layer.insight}</Text>
                 )}
-                
+
                 {!layer && isAnalyzing && currentStep === index && (
                   <View style={styles.analyzing}>
-                    <View style={[styles.dot, styles.dot1]} />
-                    <View style={[styles.dot, styles.dot2]} />
-                    <View style={[styles.dot, styles.dot3]} />
+                    <View style={[styles.dot, { backgroundColor: colors.textMuted, opacity: 0.4 }]} />
+                    <View style={[styles.dot, { backgroundColor: colors.textMuted, opacity: 0.6 }]} />
+                    <View style={[styles.dot, { backgroundColor: colors.textMuted, opacity: 0.8 }]} />
                   </View>
                 )}
               </Animated.View>
@@ -218,47 +211,35 @@ export default function AnalysisScreen() {
               styles.rootCauseSection,
               {
                 opacity: rootCauseAnim,
-                transform: [
-                  {
-                    translateY: rootCauseAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [30, 0],
-                    }),
-                  },
-                ],
+                transform: [{
+                  translateY: rootCauseAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  }),
+                }],
               },
             ]}
           >
-            <LinearGradient
-              colors={[Colors.primary + '15', Colors.primaryDark + '10']}
-              style={styles.rootCauseGradient}
-            >
+            <View style={[styles.rootCauseCard, { backgroundColor: colors.primarySoft, borderColor: colors.primary + '30' }]}>
               <View style={styles.rootCauseHeader}>
-                <Target color={Colors.primary} size={22} />
-                <Text style={styles.rootCauseTitle}>Root Cause</Text>
+                <Target color={colors.primary} size={20} />
+                <Text style={[styles.rootCauseTitle, { color: colors.primary }]}>Root Cause</Text>
               </View>
-              <Text style={styles.rootCauseText}>{rootCause}</Text>
-            </LinearGradient>
+              <Text style={[styles.rootCauseText, { color: colors.text }]}>{rootCause}</Text>
+            </View>
           </Animated.View>
         )}
       </ScrollView>
 
       {rootCause && (
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background, borderTopColor: colors.separator }]}>
           <TouchableOpacity
-            style={styles.completeButton}
+            style={[styles.completeButton, { backgroundColor: colors.primary }]}
             onPress={handleComplete}
             activeOpacity={0.8}
           >
-            <LinearGradient
-              colors={[Colors.primary, Colors.primaryDark]}
-              style={styles.completeGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <Text style={styles.completeText}>Save & Continue</Text>
-              <ArrowRight color={Colors.background} size={20} />
-            </LinearGradient>
+            <Text style={[styles.completeText, { color: colors.textInverse }]}>Save & Continue</Text>
+            <ArrowRight color={colors.textInverse} size={18} />
           </TouchableOpacity>
         </View>
       )}
@@ -269,7 +250,6 @@ export default function AnalysisScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -279,10 +259,9 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.surface,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -291,19 +270,16 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   progressTrack: {
-    height: 4,
-    backgroundColor: Colors.surface,
-    borderRadius: 2,
+    height: 3,
+    borderRadius: 1.5,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: Colors.primary,
-    borderRadius: 2,
+    borderRadius: 1.5,
   },
   progressText: {
     fontSize: 12,
-    color: Colors.textSecondary,
     textAlign: 'right',
   },
   scrollView: {
@@ -314,22 +290,20 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   thoughtContainer: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
-    padding: 20,
+    padding: 18,
     marginBottom: 24,
+    borderWidth: 0.5,
   },
   thoughtLabel: {
-    fontSize: 12,
-    color: Colors.textTertiary,
+    fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 8,
   },
   thoughtText: {
-    fontSize: 16,
-    color: Colors.text,
-    lineHeight: 24,
+    fontSize: 15,
+    lineHeight: 23,
   },
   layersSection: {
     marginBottom: 24,
@@ -338,19 +312,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600' as const,
-    color: Colors.text,
   },
   layerCard: {
-    backgroundColor: Colors.surface,
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
+    padding: 18,
+    marginBottom: 10,
     borderLeftWidth: 3,
+    borderWidth: 0.5,
   },
   layerHeader: {
     flexDirection: 'row',
@@ -358,86 +331,70 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   layerBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
   },
   layerNumber: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700' as const,
   },
   layerTitleContainer: {
     flex: 1,
   },
   layerTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.text,
   },
   layerDescription: {
-    fontSize: 13,
-    color: Colors.textSecondary,
+    fontSize: 12,
     marginTop: 2,
   },
   checkmark: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
   },
   layerInsight: {
-    fontSize: 15,
-    color: Colors.textSecondary,
-    lineHeight: 22,
-    marginTop: 16,
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 14,
   },
   analyzing: {
     flexDirection: 'row',
     gap: 6,
-    marginTop: 16,
+    marginTop: 14,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.textTertiary,
-  },
-  dot1: {
-    opacity: 0.4,
-  },
-  dot2: {
-    opacity: 0.6,
-  },
-  dot3: {
-    opacity: 0.8,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
   },
   rootCauseSection: {
     marginBottom: 24,
   },
-  rootCauseGradient: {
-    borderRadius: 20,
-    padding: 24,
+  rootCauseCard: {
+    borderRadius: 18,
+    padding: 22,
     borderWidth: 1,
-    borderColor: Colors.primary + '30',
   },
   rootCauseHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   rootCauseTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700' as const,
-    color: Colors.primary,
   },
   rootCauseText: {
-    fontSize: 16,
-    color: Colors.text,
-    lineHeight: 26,
+    fontSize: 15,
+    lineHeight: 24,
   },
   footer: {
     position: 'absolute',
@@ -446,24 +403,18 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 20,
     paddingTop: 16,
-    backgroundColor: Colors.background,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopWidth: 0.5,
   },
   completeButton: {
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  completeGradient: {
+    borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
+    paddingVertical: 17,
     gap: 10,
   },
   completeText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.background,
   },
 });

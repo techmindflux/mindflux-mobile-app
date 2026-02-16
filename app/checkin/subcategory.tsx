@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { THOUGHT_NATURES, SUB_CATEGORIES } from '@/constants/checkin';
 import { ThoughtNature } from '@/types/checkin';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const CIRCLE_SIZE = (width - 60) / 3;
@@ -21,9 +22,10 @@ const CIRCLE_SIZE = (width - 60) / 3;
 export default function SubCategoryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const { nature } = useLocalSearchParams<{ nature: ThoughtNature }>();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnims = useRef(
     SUB_CATEGORIES[nature || 'ruminating'].map(() => new Animated.Value(0.8))
@@ -63,7 +65,7 @@ export default function SubCategoryScreen() {
     if (selectedCategories.length === 0) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push({
-      pathname: '/checkin/details',
+      pathname: '/checkin/details' as never,
       params: {
         nature,
         subCategories: selectedCategories.join(','),
@@ -77,13 +79,13 @@ export default function SubCategoryScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <TouchableOpacity
-        style={styles.backButton}
+        style={[styles.backButton, { top: insets.top + 12 }]}
         onPress={handleBack}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <ArrowLeft color="#636366" size={24} />
+        <ArrowLeft color={colors.textSecondary} size={22} />
       </TouchableOpacity>
 
       <ScrollView
@@ -92,8 +94,10 @@ export default function SubCategoryScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          <Text style={styles.title}>What&apos;s your mind doing right now?</Text>
-          <Text style={styles.subtitle}>Select all that apply</Text>
+          <Text style={[styles.title, { color: colors.text }]}>
+            What&apos;s your mind doing right now?
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>Select all that apply</Text>
 
           <View style={styles.circlesContainer}>
             {subCategories.map((category, index) => {
@@ -110,8 +114,8 @@ export default function SubCategoryScreen() {
                     style={[
                       styles.circle,
                       {
-                        backgroundColor: natureData.color,
-                        opacity: isSelected ? 1 : 0.7,
+                        backgroundColor: isDark ? natureData.color + 'CC' : natureData.color,
+                        opacity: isSelected ? 1 : 0.65,
                       },
                     ]}
                     onPress={() => toggleCategory(category.id)}
@@ -127,11 +131,14 @@ export default function SubCategoryScreen() {
         </Animated.View>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 20, backgroundColor: colors.background }]}>
         <TouchableOpacity
           style={[
             styles.continueButton,
-            selectedCategories.length === 0 && styles.continueButtonDisabled,
+            {
+              backgroundColor: selectedCategories.length > 0 ? colors.primary : colors.surfaceSecondary,
+            },
+            selectedCategories.length === 0 && { opacity: 0.5 },
           ]}
           onPress={handleContinue}
           disabled={selectedCategories.length === 0}
@@ -140,7 +147,7 @@ export default function SubCategoryScreen() {
           <Text
             style={[
               styles.continueText,
-              selectedCategories.length === 0 && styles.continueTextDisabled,
+              { color: selectedCategories.length > 0 ? colors.textInverse : colors.textMuted },
             ]}
           >
             {selectedCategories.length > 0
@@ -148,8 +155,8 @@ export default function SubCategoryScreen() {
               : 'Select thoughts above'}
           </Text>
           <ArrowRight
-            color={selectedCategories.length > 0 ? '#636366' : '#C7C7CC'}
-            size={20}
+            color={selectedCategories.length > 0 ? colors.textInverse : colors.textMuted}
+            size={18}
           />
         </TouchableOpacity>
       </View>
@@ -160,11 +167,9 @@ export default function SubCategoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F6F3',
   },
   backButton: {
     position: 'absolute',
-    top: 60,
     left: 20,
     zIndex: 10,
     padding: 8,
@@ -173,23 +178,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 80,
+    paddingTop: 60,
     paddingBottom: 120,
   },
   content: {
     paddingHorizontal: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '300' as const,
-    color: '#2C2C2E',
     textAlign: 'center',
     fontStyle: 'italic',
     marginBottom: 8,
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#8E8E93',
+    fontSize: 15,
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -212,7 +216,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   circleLabel: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '500' as const,
     color: '#FFFFFF',
     textAlign: 'center',
@@ -232,32 +236,18 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 24,
     paddingTop: 16,
-    backgroundColor: 'rgba(247, 246, 243, 0.95)',
   },
   continueButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
     paddingVertical: 16,
     paddingHorizontal: 24,
-    borderRadius: 28,
+    borderRadius: 16,
     gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  continueButtonDisabled: {
-    backgroundColor: '#F0F0F0',
   },
   continueText: {
-    fontSize: 16,
-    fontWeight: '500' as const,
-    color: '#2C2C2E',
-  },
-  continueTextDisabled: {
-    color: '#C7C7CC',
+    fontSize: 15,
+    fontWeight: '600' as const,
   },
 });

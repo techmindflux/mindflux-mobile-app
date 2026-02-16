@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { THOUGHT_NATURES } from '@/constants/checkin';
 import { ThoughtNature } from '@/types/checkin';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const CIRCLE_SIZE = (width - 80) / 2;
@@ -20,6 +21,7 @@ const CIRCLE_SIZE = (width - 80) / 2;
 export default function CheckInNatureScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnims = useRef(THOUGHT_NATURES.map(() => new Animated.Value(0.8))).current;
 
@@ -44,7 +46,7 @@ export default function CheckInNatureScreen() {
   const handleSelectNature = (nature: ThoughtNature) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push({
-      pathname: '/checkin/subcategory',
+      pathname: '/checkin/subcategory' as never,
       params: { nature },
     });
   };
@@ -55,18 +57,22 @@ export default function CheckInNatureScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <TouchableOpacity
-        style={styles.closeButton}
+        style={[styles.closeButton, { top: insets.top + 12 }]}
         onPress={handleClose}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <X color="#636366" size={24} />
+        <X color={colors.textSecondary} size={22} />
       </TouchableOpacity>
 
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <Text style={styles.title}>What&apos;s the nature of your thoughts?</Text>
-        <Text style={styles.subtitle}>Tap the one that resonates most</Text>
+        <Text style={[styles.title, { color: colors.text }]}>
+          What&apos;s the nature of your thoughts?
+        </Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+          Tap the one that resonates most
+        </Text>
 
         <View style={styles.circlesContainer}>
           {THOUGHT_NATURES.map((nature, index) => (
@@ -78,7 +84,10 @@ export default function CheckInNatureScreen() {
               ]}
             >
               <TouchableOpacity
-                style={[styles.circle, { backgroundColor: nature.color }]}
+                style={[
+                  styles.circle,
+                  { backgroundColor: isDark ? nature.color + 'CC' : nature.color },
+                ]}
                 onPress={() => handleSelectNature(nature.id)}
                 activeOpacity={0.8}
               >
@@ -96,11 +105,9 @@ export default function CheckInNatureScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F6F3',
   },
   closeButton: {
     position: 'absolute',
-    top: 60,
     left: 20,
     zIndex: 10,
     padding: 8,
@@ -108,19 +115,18 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 80,
+    paddingTop: 60,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '300' as const,
-    color: '#2C2C2E',
     textAlign: 'center',
     fontStyle: 'italic',
     marginBottom: 8,
+    letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#8E8E93',
+    fontSize: 15,
     textAlign: 'center',
     marginBottom: 40,
   },
@@ -143,15 +149,15 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   circleLabel: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600' as const,
     color: '#FFFFFF',
     marginBottom: 4,
   },
   circleDescription: {
-    fontSize: 13,
+    fontSize: 12,
     color: 'rgba(255, 255, 255, 0.85)',
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 17,
   },
 });

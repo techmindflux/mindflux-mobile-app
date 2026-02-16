@@ -12,28 +12,28 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Send, Sparkles, Brain } from 'lucide-react-native';
+import { Send, Feather, Leaf } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useThoughts } from '@/contexts/ThoughtContext';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const { startAnalysis } = useThoughts();
   const [thought, setThought] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const breatheAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 800,
+        duration: 900,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
@@ -44,46 +44,47 @@ export default function HomeScreen() {
       }),
     ]).start();
 
-    const pulse = Animated.loop(
+    const breathe = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.05,
-          duration: 2000,
+        Animated.timing(breatheAnim, {
+          toValue: 1,
+          duration: 4000,
           useNativeDriver: true,
         }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 2000,
+        Animated.timing(breatheAnim, {
+          toValue: 0,
+          duration: 4000,
           useNativeDriver: true,
         }),
       ])
     );
-    pulse.start();
-
-    return () => pulse.stop();
+    breathe.start();
+    return () => breathe.stop();
   }, []);
 
   const handleSubmit = () => {
     if (!thought.trim()) return;
-    
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     console.log('Submitting thought:', thought);
     startAnalysis(thought.trim());
-    router.push('/analysis');
+    router.push('/analysis' as never);
     setThought('');
   };
 
   const isValid = thought.trim().length > 10;
 
+  const breatheScale = breatheAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.08],
+  });
+
+  const breatheOpacity = breatheAnim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0.3, 0.6, 0.3],
+  });
+
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={[Colors.background, '#12121A', Colors.background]}
-        style={StyleSheet.absoluteFill}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      />
-      
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
@@ -91,7 +92,7 @@ export default function HomeScreen() {
         <ScrollView
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 100 }
+            { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 100 }
           ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -105,18 +106,28 @@ export default function HomeScreen() {
               },
             ]}
           >
-            <Animated.View style={[styles.logoContainer, { transform: [{ scale: pulseAnim }] }]}>
-              <LinearGradient
-                colors={[Colors.primary, Colors.primaryDark]}
-                style={styles.logoGradient}
-              >
-                <Brain color={Colors.background} size={32} />
-              </LinearGradient>
-            </Animated.View>
-            
-            <Text style={styles.title}>MindFlux</Text>
-            <Text style={styles.subtitle}>
-              Explore the layers beneath your thoughts
+            <View style={styles.logoArea}>
+              <Animated.View
+                style={[
+                  styles.breatheRing,
+                  {
+                    backgroundColor: colors.primarySoft,
+                    transform: [{ scale: breatheScale }],
+                    opacity: breatheOpacity,
+                  },
+                ]}
+              />
+              <View style={[styles.logoContainer, { backgroundColor: colors.primary }]}>
+                <Leaf color={colors.textInverse} size={28} />
+              </View>
+            </View>
+
+            <Text style={[styles.greeting, { color: colors.textSecondary }]}>
+              {getGreeting()}
+            </Text>
+            <Text style={[styles.title, { color: colors.text }]}>MindFlux</Text>
+            <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+              A quiet space for your thoughts
             </Text>
           </Animated.View>
 
@@ -130,18 +141,23 @@ export default function HomeScreen() {
             ]}
           >
             <View style={styles.promptContainer}>
-              <Sparkles color={Colors.primary} size={18} />
-              <Text style={styles.promptText}>What&apos;s on your mind?</Text>
+              <Feather color={colors.primary} size={16} />
+              <Text style={[styles.promptText, { color: colors.text }]}>
+                What&apos;s on your mind?
+              </Text>
             </View>
 
             <View style={[
               styles.inputContainer,
-              isFocused && styles.inputContainerFocused
+              {
+                backgroundColor: colors.surface,
+                borderColor: isFocused ? colors.primary : colors.border,
+              },
             ]}>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: colors.text }]}
                 placeholder="Share your thoughts, feelings, or worries..."
-                placeholderTextColor={Colors.textTertiary}
+                placeholderTextColor={colors.inputPlaceholder}
                 value={thought}
                 onChangeText={setThought}
                 onFocus={() => setIsFocused(true)}
@@ -150,9 +166,8 @@ export default function HomeScreen() {
                 maxLength={500}
                 textAlignVertical="top"
               />
-              
               <View style={styles.inputFooter}>
-                <Text style={styles.charCount}>
+                <Text style={[styles.charCount, { color: colors.textMuted }]}>
                   {thought.length}/500
                 </Text>
               </View>
@@ -161,34 +176,33 @@ export default function HomeScreen() {
             <TouchableOpacity
               style={[
                 styles.submitButton,
-                !isValid && styles.submitButtonDisabled,
+                {
+                  backgroundColor: isValid ? colors.primary : colors.surfaceSecondary,
+                },
+                !isValid && { opacity: 0.6 },
               ]}
               onPress={handleSubmit}
               disabled={!isValid}
               activeOpacity={0.8}
             >
-              <LinearGradient
-                colors={isValid ? [Colors.primary, Colors.primaryDark] : [Colors.surfaceLight, Colors.surfaceLight]}
-                style={styles.submitGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <Text style={[
-                  styles.submitText,
-                  !isValid && styles.submitTextDisabled
-                ]}>
-                  Analyze Thought
-                </Text>
-                <Send
-                  color={isValid ? Colors.background : Colors.textTertiary}
-                  size={20}
-                />
-              </LinearGradient>
+              <Text style={[
+                styles.submitText,
+                { color: isValid ? colors.textInverse : colors.textMuted }
+              ]}>
+                Analyze Thought
+              </Text>
+              <Send
+                color={isValid ? colors.textInverse : colors.textMuted}
+                size={18}
+              />
             </TouchableOpacity>
 
             <View style={styles.hintContainer}>
-              <Text style={styles.hintText}>
-                Our AI will explore 3 layers of your thought to uncover its root cause
+              <View style={[styles.hintDot, { backgroundColor: colors.layer1 }]} />
+              <View style={[styles.hintDot, { backgroundColor: colors.layer2 }]} />
+              <View style={[styles.hintDot, { backgroundColor: colors.layer3 }]} />
+              <Text style={[styles.hintText, { color: colors.textMuted }]}>
+                3 layers of understanding await
               </Text>
             </View>
           </Animated.View>
@@ -198,10 +212,16 @@ export default function HomeScreen() {
   );
 }
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   flex: {
     flex: 1,
@@ -212,30 +232,45 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 36,
   },
-  logoContainer: {
+  logoArea: {
+    width: 80,
+    height: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 20,
   },
-  logoGradient: {
-    width: 72,
-    height: 72,
-    borderRadius: 20,
+  breatheRing: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+  },
+  logoContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  greeting: {
+    fontSize: 14,
+    fontWeight: '500' as const,
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
   title: {
-    fontSize: 36,
+    fontSize: 34,
     fontWeight: '700' as const,
-    color: Colors.text,
-    letterSpacing: -1,
-    marginBottom: 8,
+    letterSpacing: -0.8,
+    marginBottom: 6,
   },
   subtitle: {
-    fontSize: 16,
-    color: Colors.textSecondary,
+    fontSize: 15,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
+    letterSpacing: 0.2,
   },
   inputSection: {
     flex: 1,
@@ -244,70 +279,59 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   promptText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600' as const,
-    color: Colors.text,
   },
   inputContainer: {
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.border,
-    padding: 20,
-    minHeight: 180,
-  },
-  inputContainerFocused: {
-    borderColor: Colors.primary,
+    padding: 18,
+    minHeight: 170,
   },
   input: {
     fontSize: 16,
-    color: Colors.text,
     lineHeight: 24,
-    minHeight: 120,
+    minHeight: 115,
   },
   inputFooter: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginTop: 12,
+    marginTop: 10,
   },
   charCount: {
     fontSize: 12,
-    color: Colors.textTertiary,
   },
   submitButton: {
-    marginTop: 24,
+    marginTop: 20,
     borderRadius: 16,
-    overflow: 'hidden',
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 18,
+    paddingVertical: 17,
     gap: 10,
   },
   submitText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.background,
-  },
-  submitTextDisabled: {
-    color: Colors.textTertiary,
   },
   hintContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 24,
-    paddingHorizontal: 16,
+    gap: 6,
+  },
+  hintDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   hintText: {
-    fontSize: 14,
-    color: Colors.textTertiary,
-    textAlign: 'center',
-    lineHeight: 20,
+    fontSize: 13,
+    marginLeft: 4,
+    letterSpacing: 0.2,
   },
 });

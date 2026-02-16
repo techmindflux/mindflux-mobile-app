@@ -7,7 +7,7 @@ import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { ThoughtProvider } from "@/contexts/ThoughtContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import Colors from "@/constants/colors";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -15,6 +15,7 @@ const queryClient = new QueryClient();
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
+  const { colors } = useTheme();
   const router = useRouter();
   const segments = useSegments();
 
@@ -33,8 +34,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -42,52 +43,65 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function ThemedLayout() {
+  const { colors, isDark } = useTheme();
+
+  return (
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <AuthGate>
+        <Stack
+          screenOptions={{
+            headerBackTitle: "Back",
+            headerStyle: { backgroundColor: colors.background },
+            headerTintColor: colors.text,
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        >
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="analysis"
+            options={{
+              presentation: "fullScreenModal",
+              headerShown: false,
+              animation: "fade",
+            }}
+          />
+          <Stack.Screen
+            name="thought-detail"
+            options={{
+              presentation: "modal",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="checkin"
+            options={{
+              presentation: "fullScreenModal",
+              headerShown: false,
+              animation: "slide_from_bottom",
+            }}
+          />
+          <Stack.Screen
+            name="coaching"
+            options={{
+              presentation: "fullScreenModal",
+              headerShown: false,
+              animation: "fade",
+            }}
+          />
+        </Stack>
+      </AuthGate>
+    </>
+  );
+}
+
 function RootLayoutNav() {
   return (
-    <AuthGate>
-      <Stack
-        screenOptions={{
-          headerBackTitle: "Back",
-          headerStyle: { backgroundColor: Colors.background },
-          headerTintColor: Colors.text,
-          contentStyle: { backgroundColor: Colors.background },
-        }}
-      >
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="analysis"
-          options={{
-            presentation: "fullScreenModal",
-            headerShown: false,
-            animation: "fade",
-          }}
-        />
-        <Stack.Screen
-          name="thought-detail"
-          options={{
-            presentation: "modal",
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen
-          name="checkin"
-          options={{
-            presentation: "fullScreenModal",
-            headerShown: false,
-            animation: "slide_from_bottom",
-          }}
-        />
-        <Stack.Screen
-          name="coaching"
-          options={{
-            presentation: "fullScreenModal",
-            headerShown: false,
-            animation: "fade",
-          }}
-        />
-      </Stack>
-    </AuthGate>
+    <ThemeProvider>
+      <ThemedLayout />
+    </ThemeProvider>
   );
 }
 
@@ -101,7 +115,6 @@ export default function RootLayout() {
       <AuthProvider>
         <ThoughtProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <StatusBar style="light" />
             <RootLayoutNav />
           </GestureHandlerRootView>
         </ThoughtProvider>
@@ -115,6 +128,5 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
   },
 });
