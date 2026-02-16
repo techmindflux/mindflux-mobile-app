@@ -9,7 +9,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react-native';
+import { ArrowLeft, ChevronDown, ChevronUp, Plus, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import Slider from '@react-native-community/slider';
@@ -32,6 +32,18 @@ export default function CheckInDetailsScreen() {
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
   const [selectedCompanion, setSelectedCompanion] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+
+  const [customActivities, setCustomActivities] = useState<string[]>([]);
+  const [customCompanions, setCustomCompanions] = useState<string[]>([]);
+  const [customLocations, setCustomLocations] = useState<string[]>([]);
+
+  const [addingActivity, setAddingActivity] = useState(false);
+  const [addingCompanion, setAddingCompanion] = useState(false);
+  const [addingLocation, setAddingLocation] = useState(false);
+
+  const [newActivityText, setNewActivityText] = useState('');
+  const [newCompanionText, setNewCompanionText] = useState('');
+  const [newLocationText, setNewLocationText] = useState('');
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -75,6 +87,81 @@ export default function CheckInDetailsScreen() {
       },
     });
   };
+
+  const handleAddCustomItem = (
+    text: string,
+    setter: React.Dispatch<React.SetStateAction<string[]>>,
+    existingDefaults: string[],
+    existingCustom: string[],
+    selectSetter: React.Dispatch<React.SetStateAction<string | null>>,
+    clearText: () => void,
+    closeAdding: () => void,
+  ) => {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      closeAdding();
+      return;
+    }
+    const allItems = [...existingDefaults, ...existingCustom];
+    if (allItems.some((item) => item.toLowerCase() === trimmed.toLowerCase())) {
+      selectSetter(allItems.find((item) => item.toLowerCase() === trimmed.toLowerCase()) || trimmed);
+      closeAdding();
+      clearText();
+      return;
+    }
+    setter((prev) => [...prev, trimmed]);
+    selectSetter(trimmed);
+    closeAdding();
+    clearText();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const AddButton = ({ onPress }: { onPress: () => void }) => (
+    <TouchableOpacity
+      style={[
+        styles.tag,
+        styles.addTag,
+        { borderColor: colors.border, borderStyle: 'dashed' as const },
+      ]}
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        onPress();
+      }}
+      activeOpacity={0.7}
+    >
+      <Plus color={colors.textMuted} size={16} />
+    </TouchableOpacity>
+  );
+
+  const InlineAddInput = ({
+    value,
+    onChangeText,
+    onSubmit,
+    onCancel,
+    placeholder,
+  }: {
+    value: string;
+    onChangeText: (t: string) => void;
+    onSubmit: () => void;
+    onCancel: () => void;
+    placeholder: string;
+  }) => (
+    <View style={[styles.inlineInputWrapper, { backgroundColor: colors.surface, borderColor: colors.primary }]}>
+      <TextInput
+        style={[styles.inlineInput, { color: colors.text }]}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={colors.textMuted}
+        autoFocus
+        onSubmitEditing={onSubmit}
+        returnKeyType="done"
+      />
+      <TouchableOpacity onPress={onCancel} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+        <X color={colors.textMuted} size={16} />
+      </TouchableOpacity>
+    </View>
+  );
 
   const TagButton = ({
     label,
@@ -186,7 +273,7 @@ export default function CheckInDetailsScreen() {
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>What are you doing?</Text>
             <View style={styles.tagsContainer}>
-              {ACTIVITIES.map((activity) => (
+              {[...ACTIVITIES, ...customActivities].map((activity) => (
                 <TagButton
                   key={activity}
                   label={activity}
@@ -197,13 +284,24 @@ export default function CheckInDetailsScreen() {
                   }}
                 />
               ))}
+              {addingActivity ? (
+                <InlineAddInput
+                  value={newActivityText}
+                  onChangeText={setNewActivityText}
+                  placeholder="Add activity"
+                  onSubmit={() => handleAddCustomItem(newActivityText, setCustomActivities, ACTIVITIES, customActivities, setSelectedActivity, () => setNewActivityText(''), () => setAddingActivity(false))}
+                  onCancel={() => { setAddingActivity(false); setNewActivityText(''); }}
+                />
+              ) : (
+                <AddButton onPress={() => setAddingActivity(true)} />
+              )}
             </View>
           </View>
 
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Who are you with?</Text>
             <View style={styles.tagsContainer}>
-              {COMPANIONS.map((companion) => (
+              {[...COMPANIONS, ...customCompanions].map((companion) => (
                 <TagButton
                   key={companion}
                   label={companion}
@@ -214,13 +312,24 @@ export default function CheckInDetailsScreen() {
                   }}
                 />
               ))}
+              {addingCompanion ? (
+                <InlineAddInput
+                  value={newCompanionText}
+                  onChangeText={setNewCompanionText}
+                  placeholder="Add companion"
+                  onSubmit={() => handleAddCustomItem(newCompanionText, setCustomCompanions, COMPANIONS, customCompanions, setSelectedCompanion, () => setNewCompanionText(''), () => setAddingCompanion(false))}
+                  onCancel={() => { setAddingCompanion(false); setNewCompanionText(''); }}
+                />
+              ) : (
+                <AddButton onPress={() => setAddingCompanion(true)} />
+              )}
             </View>
           </View>
 
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Where are you?</Text>
             <View style={styles.tagsContainer}>
-              {LOCATIONS.map((location) => (
+              {[...LOCATIONS, ...customLocations].map((location) => (
                 <TagButton
                   key={location}
                   label={location}
@@ -231,6 +340,17 @@ export default function CheckInDetailsScreen() {
                   }}
                 />
               ))}
+              {addingLocation ? (
+                <InlineAddInput
+                  value={newLocationText}
+                  onChangeText={setNewLocationText}
+                  placeholder="Add location"
+                  onSubmit={() => handleAddCustomItem(newLocationText, setCustomLocations, LOCATIONS, customLocations, setSelectedLocation, () => setNewLocationText(''), () => setAddingLocation(false))}
+                  onCancel={() => { setAddingLocation(false); setNewLocationText(''); }}
+                />
+              ) : (
+                <AddButton onPress={() => setAddingLocation(true)} />
+              )}
             </View>
           </View>
         </Animated.View>
@@ -372,9 +492,28 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 0.5,
   },
+  addTag: {
+    paddingHorizontal: 14,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
   tagText: {
     fontSize: 14,
     fontWeight: '500' as const,
+  },
+  inlineInputWrapper: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    gap: 8,
+  },
+  inlineInput: {
+    fontSize: 14,
+    minWidth: 80,
+    paddingVertical: 4,
   },
   footer: {
     position: 'absolute',
