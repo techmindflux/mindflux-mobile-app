@@ -50,7 +50,7 @@ export default function ThoughtDetailScreen() {
       <View style={[styles.header, { paddingTop: insets.top + 12, borderBottomColor: colors.separator }]}>
         <TouchableOpacity
           style={[styles.closeButton, { backgroundColor: colors.surface }]}
-          onPress={() => router.back()}
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/')}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <X color={colors.textSecondary} size={22} />

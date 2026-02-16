@@ -44,7 +44,11 @@ export default function AnalysisScreen() {
 
   useEffect(() => {
     if (!currentAnalysis) {
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/');
+      }
       return;
     }
 
@@ -93,13 +97,21 @@ export default function AnalysisScreen() {
 
   const handleClose = () => {
     clearCurrentAnalysis();
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
   };
 
   const handleComplete = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     completeAnalysis();
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
   };
 
   if (!currentAnalysis) return null;
