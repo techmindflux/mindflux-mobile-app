@@ -26,6 +26,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useThoughts } from '../../contexts/ThoughtContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCheckIns } from '../../contexts/CheckInContext';
 
 interface SettingItemProps {
   icon: React.ReactNode;
@@ -124,6 +125,7 @@ export default function SettingsScreen() {
   const { colors } = useTheme();
   const { thoughts } = useThoughts();
   const { user, signOut } = useAuth();
+  const { checkIns } = useCheckIns();
 
   const handleClearData = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -205,8 +207,8 @@ export default function SettingsScreen() {
           </View>
           <View style={[styles.statDivider, { backgroundColor: colors.separator }]} />
           <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: colors.primary }]}>{thoughts.length * 3}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Layers</Text>
+            <Text style={[styles.statNumber, { color: colors.primary }]}>{checkIns.length}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Check-ins</Text>
           </View>
         </View>
 
