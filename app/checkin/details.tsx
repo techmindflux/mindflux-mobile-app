@@ -37,10 +37,9 @@ export default function CheckInDetailsScreen() {
 
   const natureData = THOUGHT_NATURES.find((n) => n.id === nature) || THOUGHT_NATURES[0];
   const selectedSubCategories = subCategories?.split(',') || [];
-  const primarySubCategory = selectedSubCategories[0];
-  const subCategoryLabel =
-    SUB_CATEGORIES[nature || 'ruminating'].find((s) => s.id === primarySubCategory)?.label ||
-    primarySubCategory;
+  const subCategoryLabels = selectedSubCategories.map(
+    (id) => SUB_CATEGORIES[nature || 'ruminating'].find((s) => s.id === id)?.label || id
+  );
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -127,7 +126,9 @@ export default function CheckInDetailsScreen() {
               <View style={styles.emotionIconInner} />
             </View>
             <Text style={[styles.feelingLabel, { color: colors.textSecondary }]}>I&apos;m feeling</Text>
-            <Text style={[styles.feelingValue, { color: natureData.color }]}>{subCategoryLabel}</Text>
+            <Text style={[styles.feelingValue, { color: natureData.color }]}>
+              {subCategoryLabels.join(', ')}
+            </Text>
           </View>
 
           <View style={styles.section}>
