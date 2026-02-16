@@ -9,8 +9,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { X, Layers, Target, Calendar } from 'lucide-react-native';
-import { useTheme } from '../contexts/ThemeContext';
-import { useThoughts } from '../contexts/ThoughtContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useThoughts } from '@/contexts/ThoughtContext';
 
 function formatFullDate(dateString: string): string {
   const date = new Date(dateString);

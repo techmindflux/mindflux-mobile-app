@@ -11,11 +11,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Clock, ChevronRight, Trash2, Leaf, Heart, Brain, MapPin, Users, Activity } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useThoughts } from '../../contexts/ThoughtContext';
-import { useCheckIns, CheckInRecord } from '../../contexts/CheckInContext';
-import { ThoughtAnalysis } from '../../types/thought';
-import { THOUGHT_NATURES, SUB_CATEGORIES } from '../../constants/checkin';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useThoughts } from '@/contexts/ThoughtContext';
+import { useCheckIns, CheckInRecord } from '@/contexts/CheckInContext';
+import { ThoughtAnalysis } from '@/types/thought';
+import { THOUGHT_NATURES, SUB_CATEGORIES } from '@/constants/checkin';
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);

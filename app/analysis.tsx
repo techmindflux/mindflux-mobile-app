@@ -11,10 +11,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { X, Check, Layers, Target, ArrowRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useTheme } from '../contexts/ThemeContext';
-import { useThoughts } from '../contexts/ThoughtContext';
-import { analyzeThought } from '../utils/analyzeThought';
-import { ThoughtLayer } from '../types/thought';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useThoughts } from '@/contexts/ThoughtContext';
+import { analyzeThought } from '@/utils/analyzeThought';
+import { ThoughtLayer } from '@/types/thought';
 
 export default function AnalysisScreen() {
   const insets = useSafeAreaInsets();

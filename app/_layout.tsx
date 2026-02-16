@@ -5,10 +5,10 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
-import { ThoughtProvider } from "../contexts/ThoughtContext";
-import { AuthProvider, useAuth } from "../contexts/AuthContext";
-import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
-import { CheckInProvider } from "../contexts/CheckInContext";
+import { ThoughtProvider } from "@/contexts/ThoughtContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
+import { CheckInProvider } from "@/contexts/CheckInContext";
 
 SplashScreen.preventAutoHideAsync();
 

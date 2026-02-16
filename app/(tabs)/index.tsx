@@ -14,8 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Send, Feather, Leaf } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useThoughts } from '../../contexts/ThoughtContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useThoughts } from '@/contexts/ThoughtContext';
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
