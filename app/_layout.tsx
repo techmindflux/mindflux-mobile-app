@@ -8,6 +8,7 @@ import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { ThoughtProvider } from "../contexts/ThoughtContext";
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
 import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
+import { CheckInProvider } from "../contexts/CheckInContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -114,9 +115,11 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ThoughtProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <RootLayoutNav />
-          </GestureHandlerRootView>
+          <CheckInProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <RootLayoutNav />
+            </GestureHandlerRootView>
+          </CheckInProvider>
         </ThoughtProvider>
       </AuthProvider>
     </QueryClientProvider>

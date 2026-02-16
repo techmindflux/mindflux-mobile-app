@@ -16,6 +16,8 @@ import Slider from '@react-native-community/slider';
 import { THOUGHT_NATURES, SUB_CATEGORIES, ACTIVITIES, COMPANIONS, LOCATIONS } from '../../constants/checkin';
 import { ThoughtNature } from '../../types/checkin';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useCheckIns } from '../../contexts/CheckInContext';
+import { CheckInData } from '../../types/checkin';
 
 export default function CheckInDetailsScreen() {
   const router = useRouter();
@@ -72,8 +74,23 @@ export default function CheckInDetailsScreen() {
     router.back();
   };
 
+  const { addCheckIn } = useCheckIns();
+
   const handleStartSession = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+    const checkInData: CheckInData = {
+      nature: nature || 'ruminating',
+      subCategories: selectedSubCategories,
+      intensity,
+      journalEntry: journalEntry || undefined,
+      activity: selectedActivity || undefined,
+      companion: selectedCompanion || undefined,
+      location: selectedLocation || undefined,
+      createdAt: new Date().toISOString(),
+    };
+    addCheckIn(checkInData);
+
     router.push({
       pathname: '/coaching' as never,
       params: {
