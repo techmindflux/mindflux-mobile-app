@@ -11,9 +11,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Clock, ChevronRight, Trash2, Leaf } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useThoughts } from '@/contexts/ThoughtContext';
-import { ThoughtAnalysis } from '@/types/thought';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useThoughts } from '../../contexts/ThoughtContext';
+import { ThoughtAnalysis } from '../../types/thought';
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);

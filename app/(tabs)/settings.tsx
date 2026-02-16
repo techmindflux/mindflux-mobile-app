@@ -23,9 +23,9 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useThoughts } from '@/contexts/ThoughtContext';
-import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useThoughts } from '../../contexts/ThoughtContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface SettingItemProps {
   icon: React.ReactNode;

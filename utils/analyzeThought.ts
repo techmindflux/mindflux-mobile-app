@@ -1,4 +1,4 @@
-import { ThoughtLayer } from '@/types/thought';
+import { ThoughtLayer } from '../types/thought';
 import { analyzeThoughtWithAI } from './aiService';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));

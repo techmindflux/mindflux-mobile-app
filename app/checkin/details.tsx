@@ -13,9 +13,9 @@ import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import Slider from '@react-native-community/slider';
-import { THOUGHT_NATURES, SUB_CATEGORIES, ACTIVITIES, COMPANIONS, LOCATIONS } from '@/constants/checkin';
-import { ThoughtNature } from '@/types/checkin';
-import { useTheme } from '@/contexts/ThemeContext';
+import { THOUGHT_NATURES, SUB_CATEGORIES, ACTIVITIES, COMPANIONS, LOCATIONS } from '../../constants/checkin';
+import { ThoughtNature } from '../../types/checkin';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function CheckInDetailsScreen() {
   const router = useRouter();

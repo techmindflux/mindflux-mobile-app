@@ -10,9 +10,9 @@ import {
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { THOUGHT_NATURES } from '@/constants/checkin';
-import { ThoughtNature } from '@/types/checkin';
-import { useTheme } from '@/contexts/ThemeContext';
+import { THOUGHT_NATURES } from '../../constants/checkin';
+import { ThoughtNature } from '../../types/checkin';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const CIRCLE_SIZE = (width - 80) / 2;

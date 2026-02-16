@@ -2,7 +2,7 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useCallback } from 'react';
-import { ThoughtAnalysis, ThoughtLayer } from '@/types/thought';
+import { ThoughtAnalysis, ThoughtLayer } from '../types/thought';
 
 const STORAGE_KEY = 'mindflux_thoughts';
 

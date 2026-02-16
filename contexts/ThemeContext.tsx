@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import createContextHook from '@nkzw/create-context-hook';
-import { LightTheme, DarkTheme, ThemeColors } from '@/constants/themes';
+import { LightTheme, DarkTheme, ThemeColors } from '../constants/themes';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 

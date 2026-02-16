@@ -1,4 +1,4 @@
-import { ThoughtNatureOption, SubCategory } from '@/types/checkin';
+import { ThoughtNatureOption, SubCategory } from '../types/checkin';
 
 export const THOUGHT_NATURES: ThoughtNatureOption[] = [
   {
