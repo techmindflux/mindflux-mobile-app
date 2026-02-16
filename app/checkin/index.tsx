@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { X } from 'lucide-react-native';
@@ -66,38 +67,43 @@ export default function CheckInNatureScreen() {
         <X color={colors.textSecondary} size={22} />
       </TouchableOpacity>
 
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <Text style={[styles.title, { color: colors.text }]}>
-          What&apos;s the nature of your thoughts?
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-          Tap the one that resonates most
-        </Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+          <Text style={[styles.title, { color: colors.text }]}>
+            What&apos;s the nature of your thoughts?
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+            Tap the one that resonates most
+          </Text>
 
-        <View style={styles.circlesContainer}>
-          {THOUGHT_NATURES.map((nature, index) => (
-            <Animated.View
-              key={nature.id}
-              style={[
-                styles.circleWrapper,
-                { transform: [{ scale: scaleAnims[index] }] },
-              ]}
-            >
-              <TouchableOpacity
+          <View style={styles.circlesContainer}>
+            {THOUGHT_NATURES.map((nature, index) => (
+              <Animated.View
+                key={nature.id}
                 style={[
-                  styles.circle,
-                  { backgroundColor: isDark ? nature.color + 'CC' : nature.color },
+                  styles.circleWrapper,
+                  { transform: [{ scale: scaleAnims[index] }] },
                 ]}
-                onPress={() => handleSelectNature(nature.id)}
-                activeOpacity={0.8}
               >
-                <Text style={styles.circleLabel}>{nature.label}</Text>
-                <Text style={styles.circleDescription}>{nature.description}</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          ))}
-        </View>
-      </Animated.View>
+                <TouchableOpacity
+                  style={[
+                    styles.circle,
+                    { backgroundColor: isDark ? nature.color + 'CC' : nature.color },
+                  ]}
+                  onPress={() => handleSelectNature(nature.id)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.circleLabel}>{nature.label}</Text>
+                  <Text style={styles.circleDescription}>{nature.description}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            ))}
+          </View>
+        </Animated.View>
+      </ScrollView>
     </View>
   );
 }
@@ -112,8 +118,11 @@ const styles = StyleSheet.create({
     zIndex: 10,
     padding: 8,
   },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40,
+  },
   content: {
-    flex: 1,
     paddingHorizontal: 24,
     paddingTop: 60,
   },
