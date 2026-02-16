@@ -14,10 +14,10 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { X, Send, Sparkles } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { THOUGHT_NATURES, SUB_CATEGORIES } from '@/constants/checkin';
-import { ThoughtNature, CoachingMessage } from '@/types/checkin';
-import { sendChatMessage, getLuminaFallbackResponse, ChatMessage } from '@/utils/aiService';
-import { useTheme } from '@/contexts/ThemeContext';
+import { THOUGHT_NATURES, SUB_CATEGORIES } from '../constants/checkin';
+import { ThoughtNature, CoachingMessage } from '../types/checkin';
+import { sendChatMessage, getLuminaFallbackResponse, ChatMessage } from '../utils/aiService';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function CoachingScreen() {
   const router = useRouter();
