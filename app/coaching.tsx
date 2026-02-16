@@ -24,10 +24,14 @@ export default function CoachingScreen() {
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
-  const { nature, subCategories, intensity } = useLocalSearchParams<{
+  const { nature, subCategories, intensity, journalEntry, activity, companion, location } = useLocalSearchParams<{
     nature: ThoughtNature;
     subCategories: string;
     intensity: string;
+    journalEntry: string;
+    activity: string;
+    companion: string;
+    location: string;
   }>();
 
   const [messages, setMessages] = useState<CoachingMessage[]>([]);
@@ -50,10 +54,26 @@ export default function CoachingScreen() {
       useNativeDriver: true,
     }).start();
 
+    const contextParts: string[] = [`experiencing ${subCategoryLabels.toLowerCase()}`];
+    if (intensity) {
+      const intensityVal = parseFloat(intensity);
+      const intensityLabel = intensityVal < 0.33 ? 'mild' : intensityVal < 0.66 ? 'strong' : 'intense';
+      contextParts.push(`with ${intensityLabel} intensity`);
+    }
+    if (activity) contextParts.push(`while ${activity.toLowerCase()}`);
+    if (companion) contextParts.push(`with ${companion.toLowerCase()}`);
+    if (location) contextParts.push(`at ${location.toLowerCase()}`);
+
+    let greeting = `Hello, I'm Lumina, your mindfulness coach. I see you're ${contextParts.join(', ')}.`;
+    if (journalEntry) {
+      greeting += ` I also read your journal entry. Thank you for sharing that.`;
+    }
+    greeting += ` This is a safe space to explore what's on your mind. What would you like to share about what you're feeling right now?`;
+
     const initialMessage: CoachingMessage = {
       id: '1',
       role: 'coach',
-      content: `Hello, I'm Lumina, your mindfulness coach. I see you're experiencing ${subCategoryLabels.toLowerCase()}. This is a safe space to explore what's on your mind. What would you like to share about what you're feeling right now?`,
+      content: greeting,
       timestamp: new Date().toISOString(),
     };
 
@@ -103,7 +123,15 @@ export default function CoachingScreen() {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
 
-    const contextMessage = `The user is experiencing: ${subCategoryLabels}. Intensity level: ${intensity}/5.`;
+    const contextParts: string[] = [
+      `The user is experiencing: ${subCategoryLabels}.`,
+      `Intensity level: ${intensity} (0-1 scale).`,
+    ];
+    if (journalEntry) contextParts.push(`Journal entry: "${journalEntry}"`);
+    if (activity) contextParts.push(`Currently doing: ${activity}.`);
+    if (companion) contextParts.push(`With: ${companion}.`);
+    if (location) contextParts.push(`Location: ${location}.`);
+    const contextMessage = contextParts.join(' ');
     const updatedHistory: ChatMessage[] = [
       ...conversationHistory,
       { role: 'user' as const, content: inputText.trim() },
