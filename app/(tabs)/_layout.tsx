@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import { Home, Clock, Settings, Heart } from "lucide-react-native";
 import React from "react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 export default function TabLayout() {
   const { colors } = useTheme();
