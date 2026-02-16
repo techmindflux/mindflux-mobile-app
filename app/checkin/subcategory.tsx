@@ -27,12 +27,12 @@ export default function SubCategoryScreen() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const subCategories = SUB_CATEGORIES[nature || 'ruminating'];
   const scaleAnims = useRef(
-    SUB_CATEGORIES[nature || 'ruminating'].map(() => new Animated.Value(0.8))
+    subCategories.map(() => new Animated.Value(0.8))
   ).current;
 
   const natureData = THOUGHT_NATURES.find((n) => n.id === nature) || THOUGHT_NATURES[0];
-  const subCategories = SUB_CATEGORIES[nature || 'ruminating'];
 
   useEffect(() => {
     Animated.timing(fadeAnim, {

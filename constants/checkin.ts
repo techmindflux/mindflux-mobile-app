@@ -39,6 +39,10 @@ export const SUB_CATEGORIES: Record<string, SubCategory[]> = {
     { id: 'overthinking', label: 'Overthinking' },
     { id: 'fixating', label: 'Fixating' },
     { id: 'analyzing', label: 'Analyzing' },
+    { id: 'looping', label: 'Looping' },
+    { id: 'reminiscing', label: 'Reminiscing' },
+    { id: 'obsessing', label: 'Obsessing' },
+    { id: 'second-guessing', label: 'Second-guessing' },
   ],
   anxious: [
     { id: 'worrying', label: 'Worrying' },
@@ -47,6 +51,10 @@ export const SUB_CATEGORIES: Record<string, SubCategory[]> = {
     { id: 'anticipating', label: 'Anticipating' },
     { id: 'dreading', label: 'Dreading' },
     { id: 'panicking', label: 'Panicking' },
+    { id: 'restless', label: 'Restless' },
+    { id: 'overwhelmed', label: 'Overwhelmed' },
+    { id: 'spiraling', label: 'Spiraling' },
+    { id: 'hypervigilant', label: 'Hypervigilant' },
   ],
   critical: [
     { id: 'judging', label: 'Judging' },
@@ -55,6 +63,10 @@ export const SUB_CATEGORIES: Record<string, SubCategory[]> = {
     { id: 'blaming', label: 'Blaming' },
     { id: 'doubting', label: 'Doubting' },
     { id: 'shaming', label: 'Shaming' },
+    { id: 'belittling', label: 'Belittling' },
+    { id: 'dismissing', label: 'Dismissing' },
+    { id: 'perfectionism', label: 'Perfectionism' },
+    { id: 'harsh', label: 'Harsh' },
   ],
   clear: [
     { id: 'present', label: 'Present' },
@@ -63,6 +75,10 @@ export const SUB_CATEGORIES: Record<string, SubCategory[]> = {
     { id: 'grateful', label: 'Grateful' },
     { id: 'peaceful', label: 'Peaceful' },
     { id: 'content', label: 'Content' },
+    { id: 'grounded', label: 'Grounded' },
+    { id: 'accepting', label: 'Accepting' },
+    { id: 'aware', label: 'Aware' },
+    { id: 'joyful', label: 'Joyful' },
   ],
 };
 
