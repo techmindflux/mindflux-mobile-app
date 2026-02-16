@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
   Dimensions,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -52,6 +53,7 @@ export default function CheckInTabScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         <Text style={[styles.title, { color: colors.text }]}>
           What&apos;s the nature of your thoughts?
@@ -86,6 +88,7 @@ export default function CheckInTabScreen() {
           ))}
         </View>
       </Animated.View>
+      </ScrollView>
     </View>
   );
 }
@@ -94,8 +97,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 40,
+  },
   content: {
-    flex: 1,
     paddingHorizontal: 24,
     paddingTop: 40,
   },
