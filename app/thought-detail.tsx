@@ -9,7 +9,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
-import { X, Layers, Target, Calendar } from 'lucide-react-native';
+import { X, Layers, Target, Calendar, Sparkles } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '../contexts/ThemeContext';
 import { useThoughts } from '../contexts/ThoughtContext';
 
@@ -111,6 +112,23 @@ export default function ThoughtDetailScreen() {
           </View>
           <Text style={[styles.rootCauseText, { color: colors.text }]}>{thought.rootCause}</Text>
         </View>
+
+        <TouchableOpacity
+          style={[styles.analyseButton, { backgroundColor: colors.accent + '15', borderColor: colors.accent + '30' }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push({ pathname: '/philosophers', params: { thoughtId: thought.id } });
+          }}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.analyseIconWrap, { backgroundColor: colors.accent + '20' }]}>
+            <Sparkles color={colors.accent} size={18} />
+          </View>
+          <View style={styles.analyseTextWrap}>
+            <Text style={[styles.analyseTitle, { color: colors.accent }]}>Analyse Root Cause</Text>
+            <Text style={[styles.analyseSubtitle, { color: colors.textSecondary }]}>Get wisdom from world philosophers</Text>
+          </View>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -245,6 +263,33 @@ const styles = StyleSheet.create({
   rootCauseText: {
     fontSize: 15,
     lineHeight: 24,
+  },
+  analyseButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 24,
+    borderWidth: 1,
+    gap: 14,
+  },
+  analyseIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  analyseTextWrap: {
+    flex: 1,
+  },
+  analyseTitle: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+  },
+  analyseSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
   },
   errorText: {
     fontSize: 16,

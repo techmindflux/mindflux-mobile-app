@@ -92,6 +92,22 @@ function ThemedLayout() {
               animation: "fade",
             }}
           />
+          <Stack.Screen
+            name="philosophers"
+            options={{
+              presentation: "modal",
+              headerShown: false,
+              animation: "slide_from_bottom",
+            }}
+          />
+          <Stack.Screen
+            name="philosopher-chat"
+            options={{
+              presentation: "fullScreenModal",
+              headerShown: false,
+              animation: "fade",
+            }}
+          />
         </Stack>
       </AuthGate>
     </>

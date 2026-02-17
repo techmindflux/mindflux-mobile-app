@@ -10,7 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
-import { X, Check, Layers, Target, ArrowRight } from 'lucide-react-native';
+import { X, Check, Layers, Target, ArrowRight, Sparkles } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../contexts/ThemeContext';
 import { useThoughts } from '../contexts/ThoughtContext';
@@ -248,6 +248,18 @@ export default function AnalysisScreen() {
       {rootCause && (
         <View style={[styles.footer, { paddingBottom: insets.bottom + 16, backgroundColor: colors.background, borderTopColor: colors.separator }]}>
           <TouchableOpacity
+            style={[styles.analyseRootButton, { backgroundColor: colors.accent + '15', borderColor: colors.accent + '30' }]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              completeAnalysis();
+              router.push({ pathname: '/philosophers', params: { thoughtId: currentAnalysis?.id || '' } });
+            }}
+            activeOpacity={0.8}
+          >
+            <Sparkles color={colors.accent} size={18} />
+            <Text style={[styles.analyseRootText, { color: colors.accent }]}>Analyse Root Cause</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[styles.completeButton, { backgroundColor: colors.primary }]}
             onPress={handleComplete}
             activeOpacity={0.8}
@@ -429,6 +441,20 @@ const styles = StyleSheet.create({
   },
   completeText: {
     fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  analyseRootButton: {
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    gap: 8,
+    borderWidth: 1,
+    marginBottom: 10,
+  },
+  analyseRootText: {
+    fontSize: 15,
     fontWeight: '600' as const,
   },
 });
