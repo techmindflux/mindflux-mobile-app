@@ -11,6 +11,7 @@ export const [ThoughtProvider, useThoughts] = createContextHook(() => {
   const [currentAnalysis, setCurrentAnalysis] = useState<ThoughtAnalysis | null>(null);
   const [analysisLayers, setAnalysisLayers] = useState<ThoughtLayer[]>([]);
   const [rootCause, setRootCause] = useState<string | null>(null);
+  const [sentiment, setSentiment] = useState<number>(50);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const thoughtsQuery = useQuery({
@@ -54,12 +55,14 @@ export const [ThoughtProvider, useThoughts] = createContextHook(() => {
       originalThought: thought,
       layers: [],
       rootCause: '',
+      sentiment: 50,
       createdAt: new Date().toISOString(),
       isAnalyzing: true,
     };
     setCurrentAnalysis(newAnalysis);
     setAnalysisLayers([]);
     setRootCause(null);
+    setSentiment(50);
     setIsAnalyzing(true);
   }, []);
 
@@ -74,6 +77,11 @@ export const [ThoughtProvider, useThoughts] = createContextHook(() => {
     setIsAnalyzing(false);
   }, []);
 
+  const setAnalysisSentiment = useCallback((score: number) => {
+    console.log('Setting sentiment score:', score);
+    setSentiment(score);
+  }, []);
+
   const completeAnalysis = useCallback(() => {
     if (!currentAnalysis || !rootCause) return;
     
@@ -81,6 +89,7 @@ export const [ThoughtProvider, useThoughts] = createContextHook(() => {
       ...currentAnalysis,
       layers: analysisLayers,
       rootCause: rootCause,
+      sentiment: sentiment,
       isAnalyzing: false,
     };
     
@@ -88,7 +97,7 @@ export const [ThoughtProvider, useThoughts] = createContextHook(() => {
     saveMutation.mutate([completedAnalysis, ...current]);
     
     console.log('Analysis completed and saved');
-  }, [currentAnalysis, analysisLayers, rootCause, thoughtsQuery.data, saveMutation.mutate]);
+  }, [currentAnalysis, analysisLayers, rootCause, sentiment, thoughtsQuery.data, saveMutation.mutate]);
 
   const deleteThought = useCallback((id: string) => {
     console.log('Deleting thought:', id);
@@ -99,6 +108,7 @@ export const [ThoughtProvider, useThoughts] = createContextHook(() => {
     setCurrentAnalysis(null);
     setAnalysisLayers([]);
     setRootCause(null);
+    setSentiment(50);
     setIsAnalyzing(false);
   }, []);
 
@@ -108,10 +118,12 @@ export const [ThoughtProvider, useThoughts] = createContextHook(() => {
     currentAnalysis,
     analysisLayers,
     rootCause,
+    sentiment,
     isAnalyzing,
     startAnalysis,
     addLayer,
     setAnalysisRootCause,
+    setAnalysisSentiment,
     completeAnalysis,
     deleteThought,
     clearCurrentAnalysis,

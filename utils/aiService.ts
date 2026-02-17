@@ -137,8 +137,19 @@ You must respond in valid JSON format using exactly the following structure:
 "insight": "An in-depth explanation of the long-term relational, developmental, or cognitive pattern that may be shaping this reaction"
 }
 ],
-"rootCause": "A comprehensive and integrative paragraph explaining the psychological root cause of this thought pattern, connecting emotional triggers, belief systems, and long-standing conditioning. This explanation should feel insightful, personalized, and clinically grounded. It should also gently suggest a path toward awareness, emotional regulation, or cognitive restructuring."
+"rootCause": "A comprehensive and integrative paragraph explaining the psychological root cause of this thought pattern, connecting emotional triggers, belief systems, and long-standing conditioning. This explanation should feel insightful, personalized, and clinically grounded. It should also gently suggest a path toward awareness, emotional regulation, or cognitive restructuring.",
+"sentiment": 50
 }
+
+The "sentiment" field is a number from 0 to 100 representing the overall emotional wellbeing reflected in the thought:
+- 0-20: Severely distressed, crisis-level negativity
+- 21-35: Significant distress, strong negative emotions
+- 36-50: Moderate negativity, struggling but coping
+- 51-65: Mixed/neutral, some discomfort but manageable
+- 66-80: Generally positive, mild concerns
+- 81-100: Very positive, clear and healthy thinking
+
+Be accurate and honest with the sentiment score. A thought about wanting to harm oneself should score very low. A thought about feeling grateful should score high. Do not default to middle ranges.
 
 Analytical Guidelines:
 
@@ -226,6 +237,7 @@ export async function analyzeThoughtWithAI(thought: string): Promise<{
     insight: string;
   }[];
   rootCause: string;
+  sentiment: number;
   error?: string;
 }> {
   const apiKey = getApiKey();
@@ -267,9 +279,12 @@ export async function analyzeThoughtWithAI(thought: string): Promise<{
     console.log('Received analysis from OpenAI');
     
     const parsed = JSON.parse(content);
+    const sentiment = typeof parsed.sentiment === 'number' ? Math.max(0, Math.min(100, parsed.sentiment)) : 40;
+    console.log('AI sentiment score:', sentiment);
     return {
       layers: parsed.layers || [],
       rootCause: parsed.rootCause || '',
+      sentiment,
     };
   } catch (error) {
     console.error('Error analyzing thought:', error);
@@ -285,6 +300,7 @@ function getFallbackAnalysis(thought: string): {
     insight: string;
   }[];
   rootCause: string;
+  sentiment: number;
 } {
   const thoughtLower = thought.toLowerCase();
   
@@ -293,21 +309,32 @@ function getFallbackAnalysis(thought: string): {
   let patternInsight = 'There is a recurring pattern here - a habitual way of responding to certain situations. This pattern is not you; it is something that appears in you.';
   let rootCause = 'The root of this thought traces back to identification with the mind and its stories. You are the awareness in which these thoughts arise, not the thoughts themselves. By simply observing this pattern without judgment, you begin to loosen its grip. Ask yourself: "Who is aware of this thought?" In that question lies the beginning of freedom.';
 
+  let sentiment = 40;
+
   if (thoughtLower.includes('anxious') || thoughtLower.includes('worry') || thoughtLower.includes('fear')) {
     surfaceInsight = 'There is anxiety present - a tightening, a sense of threat. Notice how this feeling has a quality of urgency, of something needing to be fixed or escaped.';
     beliefInsight = 'Underneath this anxiety is often a belief that you are unsafe, or that something bad will happen if you don\'t maintain vigilance. This belief creates the very suffering it tries to prevent.';
     patternInsight = 'The mind has learned to anticipate danger as a protective mechanism. But notice: in this very moment, reading these words, you are safe. The threat exists only in thought.';
     rootCause = 'The root of this anxiety is identification with the thinking mind. The mind projects into the future, creating scenarios of threat. But you are not your thoughts - you are the awareness in which thoughts arise. When anxiety appears, ask: "Who is aware of this anxiety?" The one who notices the anxiety is not anxious. Rest there.';
+    sentiment = 28;
   } else if (thoughtLower.includes('sad') || thoughtLower.includes('lonely') || thoughtLower.includes('depressed')) {
     surfaceInsight = 'There is sadness here - perhaps a heaviness, a sense of loss or disconnection. This feeling is valid and deserves to be acknowledged.';
     beliefInsight = 'Beneath sadness often lies a belief about separation - from others, from happiness, from how things "should" be. This sense of lack points to something deeper.';
     patternInsight = 'The mind has created a story of incompleteness. But wholeness is not something to be achieved - it is your very nature, temporarily obscured by identification with thoughts.';
     rootCause = 'The root of this sadness is the forgetting of your true nature as awareness itself. You are seeking outside what can only be found within. The very awareness reading these words is already complete, already whole. Sadness arises and passes in you - you remain. What you are searching for is what is doing the searching.';
+    sentiment = 25;
   } else if (thoughtLower.includes('angry') || thoughtLower.includes('frustrated') || thoughtLower.includes('annoyed')) {
     surfaceInsight = 'Anger or frustration is present - there is heat, resistance, a sense that something is wrong and needs to change. This energy is asking to be acknowledged.';
     beliefInsight = 'Beneath anger is often a violated expectation or boundary. There is a belief about how things or people "should" be, and reality is not matching that image.';
     patternInsight = 'The mind resists what is, creating suffering through the insistence that things be different. But resistance itself is the pain.';
     rootCause = 'The root of this frustration is the mind\'s war with reality. When we demand that life conform to our expectations, we suffer. Peace comes not from changing the world, but from changing our relationship to it. Ask yourself: "Can I be with what is, just for this moment?" In acceptance, the anger loses its fuel.';
+    sentiment = 30;
+  }
+
+  if (thoughtLower.includes('happy') || thoughtLower.includes('grateful') || thoughtLower.includes('good') || thoughtLower.includes('great') || thoughtLower.includes('joy')) {
+    sentiment = 78;
+  } else if (thoughtLower.includes('calm') || thoughtLower.includes('peace') || thoughtLower.includes('content')) {
+    sentiment = 82;
   }
 
   return {
@@ -317,6 +344,7 @@ function getFallbackAnalysis(thought: string): {
       { id: 3, title: 'Core Pattern', description: 'The recurring pattern in your thinking', insight: patternInsight },
     ],
     rootCause,
+    sentiment,
   };
 }
 

@@ -10,6 +10,7 @@ export interface ThoughtAnalysis {
   originalThought: string;
   layers: ThoughtLayer[];
   rootCause: string;
+  sentiment: number;
   createdAt: string;
   isAnalyzing?: boolean;
 }

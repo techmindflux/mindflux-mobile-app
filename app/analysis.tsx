@@ -29,6 +29,7 @@ export default function AnalysisScreen() {
     isAnalyzing,
     addLayer,
     setAnalysisRootCause,
+    setAnalysisSentiment,
     completeAnalysis,
     clearCurrentAnalysis,
   } = useThoughts();
@@ -93,6 +94,10 @@ export default function AnalysisScreen() {
             useNativeDriver: false,
           }),
         ]).start();
+      },
+      (score: number) => {
+        console.log('Received sentiment score:', score);
+        setAnalysisSentiment(score);
       }
     );
   }, [currentAnalysis?.id]);

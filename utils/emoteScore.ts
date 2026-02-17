@@ -34,12 +34,11 @@ function getCheckInScore(checkIn: CheckInData): number {
   return Math.max(0, base - intensityFactor * 2);
 }
 
-function getThoughtScore(_thought: ThoughtAnalysis): number {
-  const layerCount = _thought.layers?.length ?? 0;
-  if (layerCount >= 3) return 55;
-  if (layerCount >= 2) return 45;
-  if (layerCount >= 1) return 40;
-  return 35;
+function getThoughtScore(thought: ThoughtAnalysis): number {
+  if (typeof thought.sentiment === 'number' && thought.sentiment >= 0 && thought.sentiment <= 100) {
+    return thought.sentiment;
+  }
+  return 40;
 }
 
 export function calculateEmoteScore(

@@ -6,7 +6,8 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 export async function analyzeThought(
   thought: string,
   onLayerComplete: (layer: ThoughtLayer) => void,
-  onRootCause: (rootCause: string) => void
+  onRootCause: (rootCause: string) => void,
+  onSentiment?: (sentiment: number) => void
 ): Promise<void> {
   console.log('Starting AI-powered thought analysis for:', thought);
   
@@ -34,6 +35,11 @@ export async function analyzeThought(
     await delay(2000);
     console.log('Root cause generated');
     onRootCause(result.rootCause);
+    
+    if (onSentiment) {
+      console.log('Sentiment score from analysis:', result.sentiment);
+      onSentiment(result.sentiment);
+    }
     
   } catch (error) {
     console.error('Error in thought analysis:', error);
@@ -68,5 +74,9 @@ export async function analyzeThought(
     onRootCause(
       'The root of this thought traces back to identification with the mind and its stories. You are the awareness in which these thoughts arise, not the thoughts themselves. By simply observing this pattern without judgment, you begin to loosen its grip. Ask yourself: "Who is aware of this thought?" In that question lies the beginning of freedom.'
     );
+    
+    if (onSentiment) {
+      onSentiment(40);
+    }
   }
 }
