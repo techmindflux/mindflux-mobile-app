@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,18 +7,76 @@ import {
   Animated,
   ScrollView,
   TextInput,
+  PanResponder,
+  LayoutChangeEvent,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, ChevronDown, ChevronUp, Plus, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import Slider from '@react-native-community/slider';
 import { THOUGHT_NATURES, SUB_CATEGORIES, ACTIVITIES, COMPANIONS, LOCATIONS } from '../../constants/checkin';
 import { ThoughtNature } from '../../types/checkin';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useCheckIns } from '../../contexts/CheckInContext';
 import { CheckInData } from '../../types/checkin';
+
+function CustomSlider({
+  value,
+  onValueChange,
+  trackColor,
+  inactiveTrackColor,
+}: {
+  value: number;
+  onValueChange: (v: number) => void;
+  trackColor: string;
+  inactiveTrackColor: string;
+}) {
+  const trackWidth = useRef(0);
+  const currentValue = useRef(value);
+
+  const handleLayout = useCallback((e: LayoutChangeEvent) => {
+    trackWidth.current = e.nativeEvent.layout.width;
+  }, []);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        const x = evt.nativeEvent.locationX;
+        const clamped = Math.min(1, Math.max(0, x / trackWidth.current));
+        currentValue.current = clamped;
+        onValueChange(clamped);
+      },
+      onPanResponderMove: (evt) => {
+        const x = evt.nativeEvent.locationX;
+        const clamped = Math.min(1, Math.max(0, x / trackWidth.current));
+        currentValue.current = clamped;
+        onValueChange(clamped);
+      },
+    })
+  ).current;
+
+  const pct = `${(value * 100).toFixed(1)}%`;
+
+  return (
+    <View
+      style={styles.customSliderTrack}
+      onLayout={handleLayout}
+      {...panResponder.panHandlers}
+    >
+      <View style={[styles.customSliderFill, { width: pct, backgroundColor: trackColor }]} />
+      <View style={[styles.customSliderInactive, { flex: 1, backgroundColor: inactiveTrackColor }]} />
+      <View
+        style={[
+          styles.customSliderThumb,
+          { left: pct, backgroundColor: trackColor },
+        ]}
+      />
+    </View>
+  );
+}
 
 export default function CheckInDetailsScreen() {
   const router = useRouter();
@@ -251,15 +309,11 @@ export default function CheckInDetailsScreen() {
               </View>
             </View>
             <View style={[styles.sliderContainer, { backgroundColor: colors.surface }]}>
-              <Slider
-                style={styles.slider}
-                minimumValue={0}
-                maximumValue={1}
+              <CustomSlider
                 value={intensity}
                 onValueChange={setIntensity}
-                minimumTrackTintColor={natureData.color}
-                maximumTrackTintColor={colors.border}
-                thumbTintColor={natureData.color}
+                trackColor={natureData.color}
+                inactiveTrackColor={colors.border}
               />
               <View style={styles.sliderLabels}>
                 <Text style={[styles.sliderLabel, { color: colors.textMuted }]}>Barely noticeable</Text>
@@ -554,5 +608,35 @@ const styles = StyleSheet.create({
   sessionButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
+  },
+  customSliderTrack: {
+    height: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+    borderRadius: 4,
+    overflow: 'visible',
+  },
+  customSliderFill: {
+    height: 6,
+    borderTopLeftRadius: 3,
+    borderBottomLeftRadius: 3,
+  },
+  customSliderInactive: {
+    height: 6,
+    borderTopRightRadius: 3,
+    borderBottomRightRadius: 3,
+  },
+  customSliderThumb: {
+    position: 'absolute',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginLeft: -12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
   },
 });
