@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,21 +10,33 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Linking,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { X, Send, Layers, Target } from 'lucide-react-native';
+import { X, Send, Layers, Target, Globe, ExternalLink, BookOpen, ChevronRight } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../contexts/ThemeContext';
 import { useThoughts } from '../contexts/ThoughtContext';
 import { PHILOSOPHERS } from '../constants/philosophers';
 import { sendChatMessage, ChatMessage } from '../utils/aiService';
+import {
+  searchWebContent,
+  buildSearchQuery,
+  PerplexitySource,
+} from '../utils/perplexityService';
+
+interface SourceGroup {
+  content: string;
+  sources: PerplexitySource[];
+}
 
 interface ConversationMessage {
   id: string;
   role: 'philosopher' | 'user';
   content: string;
   timestamp: string;
+  sourceGroup?: SourceGroup;
 }
 
 export default function PhilosopherChatScreen() {
@@ -50,12 +62,14 @@ export default function PhilosopherChatScreen() {
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<ChatMessage[]>([]);
   const [showThoughtContext, setShowThoughtContext] = useState(true);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const typingAnim = useRef(new Animated.Value(0)).current;
   const contextAnim = useRef(new Animated.Value(1)).current;
+  const searchPulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -92,6 +106,27 @@ export default function PhilosopherChatScreen() {
     }
   }, [isTyping]);
 
+  useEffect(() => {
+    if (isSearching) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(searchPulseAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(searchPulseAnim, {
+            toValue: 0,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      searchPulseAnim.setValue(0);
+    }
+  }, [isSearching]);
+
   const buildThoughtContext = (): string => {
     if (!thought) return '';
 
@@ -110,6 +145,43 @@ Root Cause identified: "${thought.rootCause}"
 Now, as ${philosopher.name}, provide your philosophical analysis and wisdom about this thought, its layers, and root cause. Speak in your unique voice and through your philosophical framework. Start by acknowledging the thought, then offer your perspective on the root cause and layers, and finally provide guidance rooted in your philosophy.`;
   };
 
+  const fetchWebSources = useCallback(async (
+    lastMessage: string
+  ): Promise<SourceGroup | undefined> => {
+    if (!thought) return undefined;
+
+    setIsSearching(true);
+    try {
+      const query = buildSearchQuery(
+        philosopher.name,
+        thought.originalThought,
+        thought.rootCause,
+        lastMessage
+      );
+
+      const result = await searchWebContent(
+        query,
+        philosopher.name,
+        `This philosopher's tradition: ${philosopher.title}. Era: ${philosopher.era}. Origin: ${philosopher.origin}.`
+      );
+
+      if (result.error || result.sources.length === 0) {
+        console.log('No sources found or error:', result.error);
+        return undefined;
+      }
+
+      return {
+        content: result.content,
+        sources: result.sources,
+      };
+    } catch (error) {
+      console.error('Error fetching web sources:', error);
+      return undefined;
+    } finally {
+      setIsSearching(false);
+    }
+  }, [thought, philosopher]);
+
   const generateInitialAnalysis = async () => {
     setIsTyping(true);
 
@@ -119,7 +191,10 @@ Now, as ${philosopher.name}, provide your philosophical analysis and wisdom abou
     ];
 
     try {
-      const response = await sendChatMessage(initialMessages, philosopher.systemPrompt);
+      const [response, sourceGroup] = await Promise.all([
+        sendChatMessage(initialMessages, philosopher.systemPrompt),
+        fetchWebSources(thought?.originalThought || ''),
+      ]);
 
       let responseContent = response.content;
       if (response.error || !responseContent) {
@@ -132,6 +207,7 @@ Now, as ${philosopher.name}, provide your philosophical analysis and wisdom abou
         role: 'philosopher',
         content: responseContent,
         timestamp: new Date().toISOString(),
+        sourceGroup,
       };
 
       setMessages([philosopherMessage]);
@@ -207,7 +283,10 @@ Now, as ${philosopher.name}, provide your philosophical analysis and wisdom abou
     setConversationHistory(updatedHistory);
 
     try {
-      const response = await sendChatMessage(updatedHistory, philosopher.systemPrompt);
+      const [response, sourceGroup] = await Promise.all([
+        sendChatMessage(updatedHistory, philosopher.systemPrompt),
+        fetchWebSources(currentInput),
+      ]);
 
       let responseContent = response.content;
       if (response.error || !responseContent) {
@@ -220,6 +299,7 @@ Now, as ${philosopher.name}, provide your philosophical analysis and wisdom abou
         role: 'philosopher',
         content: responseContent,
         timestamp: new Date().toISOString(),
+        sourceGroup,
       };
 
       setMessages((prev) => [...prev, philosopherMessage]);
@@ -242,6 +322,68 @@ Now, as ${philosopher.name}, provide your philosophical analysis and wisdom abou
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.back();
   };
+
+  const handleOpenSource = useCallback((url: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Linking.openURL(url).catch((err) => console.error('Failed to open URL:', err));
+  }, []);
+
+  const renderSourceCard = useCallback((sourceGroup: SourceGroup, messageId: string) => {
+    if (!sourceGroup.sources.length) return null;
+
+    return (
+      <View style={[styles.sourcesContainer, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}>
+        <View style={styles.sourcesHeader}>
+          <View style={[styles.sourcesIconBadge, { backgroundColor: philosopher.color + '18' }]}>
+            <Globe color={philosopher.color} size={13} />
+          </View>
+          <Text style={[styles.sourcesTitle, { color: colors.text }]}>Sources</Text>
+          <View style={[styles.sourceCountBadge, { backgroundColor: philosopher.color + '15' }]}>
+            <Text style={[styles.sourceCountText, { color: philosopher.color }]}>
+              {sourceGroup.sources.length}
+            </Text>
+          </View>
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.sourcesScrollContent}
+        >
+          {sourceGroup.sources.map((source, index) => (
+            <TouchableOpacity
+              key={`${messageId}-source-${index}`}
+              style={[styles.sourceChip, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={() => handleOpenSource(source.url)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.sourceNumberBadge, { backgroundColor: philosopher.color + '15' }]}>
+                <Text style={[styles.sourceNumber, { color: philosopher.color }]}>{index + 1}</Text>
+              </View>
+              <Text style={[styles.sourceChipTitle, { color: colors.text }]} numberOfLines={1}>
+                {source.title}
+              </Text>
+              <ExternalLink color={colors.textMuted} size={11} />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
+        {sourceGroup.content ? (
+          <View style={[styles.sourceSummary, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.sourceSummaryHeader}>
+              <BookOpen color={philosopher.color} size={12} />
+              <Text style={[styles.sourceSummaryLabel, { color: philosopher.color }]}>
+                Recommended Reading
+              </Text>
+            </View>
+            <Text style={[styles.sourceSummaryText, { color: colors.textSecondary }]} numberOfLines={4}>
+              {sourceGroup.content}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+    );
+  }, [colors, philosopher, handleOpenSource]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -311,37 +453,44 @@ Now, as ${philosopher.name}, provide your philosophical analysis and wisdom abou
           )}
 
           {messages.map((message) => (
-            <View
-              key={message.id}
-              style={[
-                styles.messageWrapper,
-                message.role === 'user' ? styles.userMessageWrapper : styles.philosopherMessageWrapper,
-              ]}
-            >
-              {message.role === 'philosopher' && (
-                <View style={[styles.messageAvatar, { borderColor: philosopher.color + '40' }]}>
-                  <Image source={{ uri: philosopher.avatar }} style={styles.messageAvatarImage} />
-                </View>
-              )}
+            <View key={message.id}>
               <View
                 style={[
-                  styles.messageBubble,
-                  message.role === 'user'
-                    ? [styles.userBubble, { backgroundColor: philosopher.color }]
-                    : [styles.philosopherBubble, { backgroundColor: colors.surface, borderColor: colors.border }],
+                  styles.messageWrapper,
+                  message.role === 'user' ? styles.userMessageWrapper : styles.philosopherMessageWrapper,
                 ]}
               >
-                <Text
+                {message.role === 'philosopher' && (
+                  <View style={[styles.messageAvatar, { borderColor: philosopher.color + '40' }]}>
+                    <Image source={{ uri: philosopher.avatar }} style={styles.messageAvatarImage} />
+                  </View>
+                )}
+                <View
                   style={[
-                    styles.messageText,
+                    styles.messageBubble,
                     message.role === 'user'
-                      ? { color: '#FFFFFF' }
-                      : { color: colors.text },
+                      ? [styles.userBubble, { backgroundColor: philosopher.color }]
+                      : [styles.philosopherBubble, { backgroundColor: colors.surface, borderColor: colors.border }],
                   ]}
                 >
-                  {message.content}
-                </Text>
+                  <Text
+                    style={[
+                      styles.messageText,
+                      message.role === 'user'
+                        ? { color: '#FFFFFF' }
+                        : { color: colors.text },
+                    ]}
+                  >
+                    {message.content}
+                  </Text>
+                </View>
               </View>
+
+              {message.role === 'philosopher' && message.sourceGroup && message.sourceGroup.sources.length > 0 && (
+                <View style={styles.sourceGroupWrapper}>
+                  {renderSourceCard(message.sourceGroup, message.id)}
+                </View>
+              )}
             </View>
           ))}
 
@@ -350,20 +499,40 @@ Now, as ${philosopher.name}, provide your philosophical analysis and wisdom abou
               <View style={[styles.messageAvatar, { borderColor: philosopher.color + '40' }]}>
                 <Image source={{ uri: philosopher.avatar }} style={styles.messageAvatarImage} />
               </View>
-              <Animated.View
-                style={[
-                  styles.typingBubble,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                    opacity: typingAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }),
-                  },
-                ]}
-              >
-                <View style={[styles.typingDot, { backgroundColor: philosopher.color }]} />
-                <View style={[styles.typingDot, { backgroundColor: philosopher.color, opacity: 0.7 }]} />
-                <View style={[styles.typingDot, { backgroundColor: philosopher.color, opacity: 0.4 }]} />
-              </Animated.View>
+              <View style={styles.typingColumn}>
+                <Animated.View
+                  style={[
+                    styles.typingBubble,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                      opacity: typingAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }),
+                    },
+                  ]}
+                >
+                  <View style={[styles.typingDot, { backgroundColor: philosopher.color }]} />
+                  <View style={[styles.typingDot, { backgroundColor: philosopher.color, opacity: 0.7 }]} />
+                  <View style={[styles.typingDot, { backgroundColor: philosopher.color, opacity: 0.4 }]} />
+                </Animated.View>
+
+                {isSearching && (
+                  <Animated.View
+                    style={[
+                      styles.searchingBadge,
+                      {
+                        backgroundColor: colors.surfaceSecondary,
+                        borderColor: colors.border,
+                        opacity: searchPulseAnim.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }),
+                      },
+                    ]}
+                  >
+                    <Globe color={philosopher.color} size={12} />
+                    <Text style={[styles.searchingText, { color: colors.textSecondary }]}>
+                      Searching the web...
+                    </Text>
+                  </Animated.View>
+                )}
+              </View>
             </View>
           )}
         </ScrollView>
@@ -545,6 +714,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
+  typingColumn: {
+    gap: 6,
+  },
   typingBubble: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -559,6 +731,107 @@ const styles = StyleSheet.create({
     width: 7,
     height: 7,
     borderRadius: 3.5,
+  },
+  searchingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    alignSelf: 'flex-start',
+  },
+  searchingText: {
+    fontSize: 11,
+    fontWeight: '500' as const,
+  },
+  sourceGroupWrapper: {
+    marginLeft: 36,
+    marginTop: 8,
+  },
+  sourcesContainer: {
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 0.5,
+    gap: 10,
+  },
+  sourcesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  sourcesIconBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sourcesTitle: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    flex: 1,
+  },
+  sourceCountBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  sourceCountText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+  },
+  sourcesScrollContent: {
+    gap: 8,
+    paddingVertical: 2,
+  },
+  sourceChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 0.5,
+    maxWidth: 200,
+  },
+  sourceNumberBadge: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sourceNumber: {
+    fontSize: 10,
+    fontWeight: '700' as const,
+  },
+  sourceChipTitle: {
+    fontSize: 12,
+    fontWeight: '500' as const,
+    flex: 1,
+  },
+  sourceSummary: {
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 0.5,
+    gap: 6,
+  },
+  sourceSummaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  sourceSummaryLabel: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    textTransform: 'uppercase' as const,
+    letterSpacing: 0.3,
+  },
+  sourceSummaryText: {
+    fontSize: 12,
+    lineHeight: 18,
   },
   inputContainer: {
     paddingHorizontal: 16,
