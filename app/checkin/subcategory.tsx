@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, ArrowRight } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -21,6 +22,7 @@ const CIRCLE_SIZE = (width - 60) / 3;
 
 export default function SubCategoryScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const { nature } = useLocalSearchParams<{ nature: ThoughtNature }>();
@@ -75,7 +77,7 @@ export default function SubCategoryScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (router.canGoBack()) {
+    if (navigation.canGoBack()) {
       router.back();
     } else {
       router.replace('/');

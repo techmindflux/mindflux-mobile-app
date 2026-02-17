@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { X, Check, Layers, Target, ArrowRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../contexts/ThemeContext';
@@ -19,6 +20,7 @@ import { ThoughtLayer } from '../types/thought';
 export default function AnalysisScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const navigation = useNavigation();
   const { colors } = useTheme();
   const {
     currentAnalysis,
@@ -44,7 +46,7 @@ export default function AnalysisScreen() {
 
   useEffect(() => {
     if (!currentAnalysis) {
-      if (router.canGoBack()) {
+      if (navigation.canGoBack()) {
         router.back();
       } else {
         router.replace('/');
@@ -97,7 +99,7 @@ export default function AnalysisScreen() {
 
   const handleClose = () => {
     clearCurrentAnalysis();
-    if (router.canGoBack()) {
+    if (navigation.canGoBack()) {
       router.back();
     } else {
       router.replace('/');
@@ -107,7 +109,7 @@ export default function AnalysisScreen() {
   const handleComplete = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     completeAnalysis();
-    if (router.canGoBack()) {
+    if (navigation.canGoBack()) {
       router.back();
     } else {
       router.replace('/');

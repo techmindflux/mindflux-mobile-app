@@ -9,6 +9,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, ChevronDown, ChevronUp, Plus, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -21,6 +22,7 @@ import { CheckInData } from '../../types/checkin';
 
 export default function CheckInDetailsScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { nature, subCategories } = useLocalSearchParams<{
@@ -71,7 +73,7 @@ export default function CheckInDetailsScreen() {
 
   const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (router.canGoBack()) {
+    if (navigation.canGoBack()) {
       router.back();
     } else {
       router.replace('/');

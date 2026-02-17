@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -21,6 +22,7 @@ const CIRCLE_SIZE = (width - 80) / 2;
 
 export default function CheckInNatureScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { colors, isDark } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -54,7 +56,7 @@ export default function CheckInNatureScreen() {
 
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (router.canGoBack()) {
+    if (navigation.canGoBack()) {
       router.back();
     } else {
       router.replace('/');

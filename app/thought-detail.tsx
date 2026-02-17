@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { X, Layers, Target, Calendar } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useThoughts } from '../contexts/ThoughtContext';
@@ -27,6 +28,7 @@ function formatFullDate(dateString: string): string {
 export default function ThoughtDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const navigation = useNavigation();
   const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { thoughts } = useThoughts();
@@ -50,7 +52,7 @@ export default function ThoughtDetailScreen() {
       <View style={[styles.header, { paddingTop: insets.top + 12, borderBottomColor: colors.separator }]}>
         <TouchableOpacity
           style={[styles.closeButton, { backgroundColor: colors.surface }]}
-          onPress={() => router.canGoBack() ? router.back() : router.replace('/')}
+          onPress={() => navigation.canGoBack() ? router.back() : router.replace('/')}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <X color={colors.textSecondary} size={22} />
