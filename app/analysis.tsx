@@ -257,7 +257,7 @@ export default function AnalysisScreen() {
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               completeAnalysis();
-              router.push({ pathname: '/philosophers', params: { thoughtId: currentAnalysis?.id || '' } });
+              router.push({ pathname: '/philosophers' as never, params: { thoughtId: currentAnalysis?.id || '' } });
             }}
             activeOpacity={0.8}
           >

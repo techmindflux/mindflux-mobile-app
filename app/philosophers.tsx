@@ -44,7 +44,7 @@ export default function PhilosophersScreen() {
   const handleSelectPhilosopher = (philosopher: Philosopher) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push({
-      pathname: '/philosopher-chat',
+      pathname: '/philosopher-chat' as never,
       params: {
         philosopherId: philosopher.id,
         thoughtId: thoughtId || '',

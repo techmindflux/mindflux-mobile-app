@@ -117,7 +117,7 @@ export default function ThoughtDetailScreen() {
           style={[styles.analyseButton, { backgroundColor: colors.accent + '15', borderColor: colors.accent + '30' }]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push({ pathname: '/philosophers', params: { thoughtId: thought.id } });
+            router.push({ pathname: '/philosophers' as never, params: { thoughtId: thought.id } });
           }}
           activeOpacity={0.7}
         >
