@@ -51,7 +51,7 @@ export const [CheckInProvider, useCheckIns] = createContextHook(() => {
     (data: CheckInData) => {
       const record: CheckInRecord = {
         ...data,
-        id: Date.now().toString(),
+        id: `c_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
       };
       const current = checkInsQuery.data || [];
       saveMutation.mutate([record, ...current]);

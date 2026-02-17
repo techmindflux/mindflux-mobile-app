@@ -50,7 +50,7 @@ export const [ThoughtProvider, useThoughts] = createContextHook(() => {
   const startAnalysis = useCallback((thought: string) => {
     console.log('Starting analysis for:', thought);
     const newAnalysis: ThoughtAnalysis = {
-      id: Date.now().toString(),
+      id: `t_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
       originalThought: thought,
       layers: [],
       rootCause: '',
