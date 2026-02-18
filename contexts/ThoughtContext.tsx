@@ -94,7 +94,13 @@ export const [ThoughtProvider, useThoughts] = createContextHook(() => {
     };
     
     const current = thoughtsQuery.data || [];
+    const alreadyExists = current.some(t => t.id === completedAnalysis.id);
+    if (alreadyExists) {
+      console.log('Analysis already saved, skipping duplicate');
+      return;
+    }
     saveMutation.mutate([completedAnalysis, ...current]);
+    setCurrentAnalysis(null);
     
     console.log('Analysis completed and saved');
   }, [currentAnalysis, analysisLayers, rootCause, sentiment, thoughtsQuery.data, saveMutation.mutate]);

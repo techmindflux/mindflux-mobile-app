@@ -383,7 +383,7 @@ export default function HistoryScreen() {
         <FlatList
           key="thoughts"
           data={thoughts}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => item.id || `thought_fallback_${index}`}
           renderItem={({ item, index }) => (
             <ThoughtCard
               item={item}
@@ -404,7 +404,7 @@ export default function HistoryScreen() {
         <FlatList
           key="checkins"
           data={checkIns}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => item.id || `checkin_fallback_${index}`}
           renderItem={({ item, index }) => (
             <CheckInCard
               item={item}
