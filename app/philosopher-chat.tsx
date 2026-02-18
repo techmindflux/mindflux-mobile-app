@@ -12,7 +12,7 @@ import {
   Image,
   Linking,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { X, Send, Layers, Target, Globe, ExternalLink, BookOpen, ChevronRight } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -318,9 +318,15 @@ Now, as ${philosopher.name}, provide your philosophical analysis and wisdom abou
     }, 100);
   };
 
+  const navigation = useNavigation();
+
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.back();
+    if (navigation.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
   };
 
   const handleOpenSource = useCallback((url: string) => {

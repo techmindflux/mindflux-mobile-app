@@ -9,7 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { X, ArrowRight, Quote } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../contexts/ThemeContext';
@@ -52,9 +52,15 @@ export default function PhilosophersScreen() {
     });
   };
 
+  const navigation = useNavigation();
+
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.back();
+    if (navigation.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
   };
 
   return (
