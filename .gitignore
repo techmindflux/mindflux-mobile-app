@@ -1,3 +1,5 @@
 node_modules
 .env
 .expo
+agents/news_agent/digest_preview.html
+agents/news_agent/news_agent.log
